@@ -871,7 +871,36 @@ window.pvPrint=function(){ const s=settlements.find(x=>x.id===$('pv').dataset.si
   w.document.write(`<!doctype html><meta charset="utf-8"><title>${s.docType==='invoice'?'대금청구서':'지급예정서'} ${s.no}</title><style>@page{size:A4;margin:16mm}${SET_DOC_CSS}</style>${settleDocHTML(s)}<scr`+`ipt>window.onload=function(){setTimeout(function(){window.print();},250);}</scr`+`ipt>`);
   w.document.close(); };
 
-function renderAcct(){ $('v-acct').innerHTML=`<div class="soon"><div class="big">📒</div><div style="font-weight:700;color:var(--ink)">회계 — 준비 중</div><div class="small" style="margin-top:6px">개별 손익 · 종합 현황 · 회계장부를 제공합니다.</div></div>`; }
+function renderAcct(){
+  const rows=projects.map(p=>{ const est=pjtEstSum(p.id), bill=pjtBilled(p.id), paid=pjtPaid(p.id); return {p, est, bill, paid, profit:bill-paid, unbilled:Math.max(0,est-bill), rate: est>0?Math.round(bill/est*100):0}; });
+  const tEst=rows.reduce((a,r)=>a+r.est,0), tBill=rows.reduce((a,r)=>a+r.bill,0), tPaid=rows.reduce((a,r)=>a+r.paid,0);
+  const tProfit=tBill-tPaid, tUnbilled=Math.max(0,tEst-tBill), tRate=tEst>0?Math.round(tBill/tEst*100):0;
+  $('v-acct').innerHTML=`<div class="sec-h"><h2>회계 · 종합 현황</h2></div>
+    <div class="sumgrid"><div class="sumcell"><div class="l">총 견적</div><div class="v">${won(tEst)}</div></div>
+      <div class="sumcell"><div class="l">총 청구 (매출)</div><div class="v">${won(tBill)}</div></div>
+      <div class="sumcell"><div class="l">총 지급</div><div class="v">${won(tPaid)}</div></div>
+      <div class="sumcell"><div class="l">총 손익</div><div class="v ${tProfit>=0?'pos':'neg'}">${tProfit>=0?'+':''}${won(tProfit)}</div></div></div>
+    <div class="row2" style="margin-top:10px">
+      <div class="card" style="padding:12px 14px"><div class="small muted">미청구 잔액 (견적−청구)</div><div style="font-size:16px;font-weight:800;color:var(--money);margin-top:2px">${won(tUnbilled)} 원</div></div>
+      <div class="card" style="padding:12px 14px"><div class="small muted">청구율 (청구/견적)</div><div style="font-size:16px;font-weight:800;color:var(--blue);margin-top:2px">${tRate}%</div></div></div>
+    <div class="small muted" style="margin:8px 2px 0">손익 = 청구(원청 매출) − 지급(하청). 비용은 회계장부 반영 시 순이익으로 확장됩니다. · 폐기 건 제외, 공급가 기준.</div>
+
+    <div class="sec-h" style="margin-top:22px"><h2>개별 손익</h2></div>
+    ${rows.length? rows.map(r=>`<div class="pjt" style="cursor:default">
+      <div class="pjt-top"><div style="flex:1"><div class="pjt-code">${r.p.code} <span class="badge type">${TYPE_LABEL[r.p.type]||'일반'}</span></div><div class="pjt-name">${r.p.name||''}</div></div>
+        <span class="badge ${r.p.status==='done'?'done':'run'}">${r.p.status==='done'?'종료':'진행중'}</span></div>
+      <div class="sumgrid"><div class="sumcell"><div class="l">견적</div><div class="v">${won(r.est)}</div></div>
+        <div class="sumcell"><div class="l">청구</div><div class="v">${won(r.bill)}</div></div>
+        <div class="sumcell"><div class="l">지급</div><div class="v">${won(r.paid)}</div></div>
+        <div class="sumcell"><div class="l">손익</div><div class="v ${r.profit>=0?'pos':'neg'}">${r.profit>=0?'+':''}${won(r.profit)}</div></div></div>
+      <div style="margin-top:9px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-bottom:3px"><span>청구율 ${r.rate}%</span><span>미청구 ${won(r.unbilled)}</span></div>
+        <div style="height:7px;background:#eef2f7;border-radius:5px;overflow:hidden"><div style="height:100%;width:${Math.min(100,r.rate)}%;background:var(--blue)"></div></div></div>
+    </div>`).join('') : '<div class="empty">프로젝트가 없습니다.</div>'}
+
+    <div class="card" style="margin-top:18px;background:#fafbfd;text-align:center;color:var(--sub)">
+      <div style="font-size:22px;margin-bottom:4px">📒</div><div style="font-weight:700;color:var(--ink);font-size:13.5px">회계장부 — 준비 중</div>
+      <div class="small" style="margin-top:4px">식대·유류비·공구자재비 등 비용을 VAT 분리해 기록하면, 위 손익이 비용까지 반영한 순이익으로 확장됩니다.</div></div>`;
+}
 
 window.tab=tab;
 </script>
