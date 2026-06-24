@@ -791,7 +791,8 @@ function settleLines(){ const d=settleDraft;
   if(d.method==='manday'){ const md=d.mandayInput!=null?d.mandayInput:(d.mandayAuto||0); return [{name:d.baseMonth+' 기술인력 투입',spec:'공수 '+md,qty:md,price:TEAM_RATE,amount:Math.round(md*TEAM_RATE)}]; }
   if(d.method==='qty'){ const lines=[]; d.estIds.forEach(id=>{ const e=estimates.find(x=>x.id===id); if(!e) return; (e.items||[]).forEach((it,idx)=>{ const q=qVal(id,idx); const amt=qAmt(id,idx,it); if(q>0||amt>0) lines.push({name:it.name,spec:(it.spec||'')+' · 수량 '+q,qty:q,price:it.price||0,amount:amt}); }); }); return lines; }
   return d.estIds.map(id=>{ const e=estimates.find(x=>x.id===id); const r=calcSetRow(id); const z=ZONES.find(z=>z.id===d.estZone[id]); const eqd=d.eqs[id]||{banipEqs:[],installEqs:[]};
-    return {name:e.title,spec:(z?z.name:'')+' 반입 '+r.banip+'/'+r.qty+' · 설치 '+r.install+'/'+r.qty,qty:1,price:r.thisBill,amount:r.thisBill}; });
+    const bN=eqd.banipEqs&&eqd.banipEqs.length?' ('+compactRanges(eqd.banipEqs)+')':''; const iN=eqd.installEqs&&eqd.installEqs.length?' ('+compactRanges(eqd.installEqs)+')':'';
+    return {name:e.title,spec:(z?z.name:'')+' 반입 '+r.banip+'/'+r.qty+bN+' · 설치 '+r.install+'/'+r.qty+iN,qty:1,price:r.thisBill,amount:r.thisBill}; });
 }
 
 window.publishSettle=async function(){ const d=settleDraft; const sup=setSupply();
