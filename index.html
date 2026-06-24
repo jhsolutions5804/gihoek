@@ -127,6 +127,8 @@
   @keyframes sp{to{transform:rotate(360deg)}}
   .denied{text-align:center; padding:60px 24px; color:var(--sub)}
   .denied .big{font-size:40px; margin-bottom:12px} .denied h2{margin:0 0 6px; font-size:18px; color:var(--ink)}
+  /* 포털 임베드(PC): 포털 왼쪽 메뉴가 내비를 제공하므로 자체 탭바 숨김 */
+  @media (min-width:900px){ html.portal-embed .tabs{display:none} }
 </style>
 </head>
 <body>
@@ -240,7 +242,10 @@ async function startApp(){
   onSnapshot(collection(db,'gihoek_settlements'), s=>{ settlements=[]; s.forEach(d=>settlements.push({id:d.id,...d.data()})); if(curTab==='pjt') { detailId?pjtDetail(detailId):renderPjt(); } else if(curTab==='settle'&&!settleDraft&&!viewSetId) renderSettle(); else if(curTab==='acct') renderAcct(); });
   onSnapshot(collection(db,'gihoek_companies'), s=>{ companies=[]; s.forEach(d=>companies.push({id:d.id,...d.data()})); companies.sort((a,b)=>(a.company||'').localeCompare(b.company||'')); if(curTab==='comp'&&!compForm) renderComp(); });
   onSnapshot(collection(db,'gihoek_expenses'), s=>{ expenses=[]; s.forEach(d=>expenses.push({id:d.id,...d.data()})); if(curTab==='acct') renderAcct(); });
-  renderPjt();
+  const params=new URLSearchParams(location.search);
+  if(params.get('via')==='portal') document.documentElement.classList.add('portal-embed');
+  const t0=params.get('tab');
+  if(t0 && ['pjt','comp','est','settle','acct'].includes(t0)) tab(t0); else renderPjt();
 }
 
 let curTab='pjt';
@@ -249,6 +254,8 @@ function tab(t){ curTab=t; detailId=null; estDraft=null; viewEstId=null; pjtForm
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('on')); $('v-'+t).classList.add('on');
   ({pjt:renderPjt, comp:renderComp, est:renderEst, settle:renderSettle, acct:renderAcct})[t](); window.scrollTo(0,0); }
 function tabSilent(t){ curTab=t; document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on', x.dataset.tab===t)); document.querySelectorAll('.view').forEach(v=>v.classList.remove('on')); $('v-'+t).classList.add('on'); }
+// 포털 사이드바에서 보낸 탭 전환 메시지 수신
+window.addEventListener('message',(e)=>{ const d=e.data; if(d&&d.source==='jh-portal'&&d.action==='goTab'&&['pjt','comp','est','settle','acct'].includes(d.key)) tab(d.key); });
 
 /* ---------------- 프로젝트 ---------------- */
 let detailId=null, pjtForm=false;
