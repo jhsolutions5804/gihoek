@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>기획 · JH Solutions</title>
+<style>
+  :root{
+    --blue:#1D5BA6; --blue-d:#16487f; --blue-l:#5BA4CF; --blue-pale:#eaf2fc;
+    --ink:#1a2330; --sub:#6b7787; --line:#e4eaf2; --bg:#eef2f7; --card:#fff;
+    --ok:#1b8a5a; --warn:#c0392b; --amber:#e08a1e; --money:#0f2f5c; --r:13px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; height:100%}
+  body{font-family:-apple-system,"Apple SD Gothic Neo","Pretendard",sans-serif; background:var(--bg); color:var(--ink); line-height:1.5; font-size:14px}
+  .wrap{max-width:900px; margin:0 auto; min-height:100vh; background:var(--bg)}
+
+  .head{background:var(--card); border-bottom:1px solid var(--line); padding:16px 20px 0; position:sticky; top:0; z-index:10}
+  .head .t{display:flex; align-items:center; gap:9px; margin-bottom:12px}
+  .head .t h1{margin:0; font-size:18px; font-weight:800}
+  .head .t .ic{width:30px; height:30px; border-radius:8px; background:var(--blue-pale); color:var(--blue); display:flex; align-items:center; justify-content:center; font-size:17px}
+  .tabs{display:flex; gap:2px}
+  .tab{padding:11px 16px; font-size:13.5px; font-weight:700; color:var(--sub); cursor:pointer; border-bottom:2.5px solid transparent; white-space:nowrap}
+  .tab.on{color:var(--blue); border-bottom-color:var(--blue)}
+
+  .body{padding:20px}
+  .view{display:none} .view.on{display:block}
+
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:16px}
+  .btn{border:none; border-radius:9px; padding:11px 16px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit}
+  .btn:disabled{opacity:.55}
+  .btn.pri{background:var(--blue); color:#fff} .btn.pri:active{background:var(--blue-d)}
+  .btn.line{background:#fff; color:var(--blue); border:1px solid var(--blue)}
+  .btn.sm{padding:7px 12px; font-size:12px; border-radius:8px}
+  .btn.gray{background:#f1f3f7; color:var(--sub)}
+  .btn.full{width:100%}
+  .sec-h{display:flex; align-items:center; justify-content:space-between; margin:0 0 14px}
+  .sec-h h2{margin:0; font-size:15px; font-weight:800}
+  .muted{color:var(--sub)} .small{font-size:12px} .right{text-align:right} .center{text-align:center}
+
+  .pjt{background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:16px 16px 14px; margin-bottom:12px; cursor:pointer; transition:.13s}
+  .pjt:hover{border-color:var(--blue-l)}
+  .pjt-top{display:flex; align-items:flex-start; gap:10px; margin-bottom:13px}
+  .pjt-code{font-size:16px; font-weight:800}
+  .pjt-name{font-size:12px; color:var(--sub); margin-top:2px}
+  .badge{font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:20px; white-space:nowrap}
+  .badge.run{background:#e7f3ee; color:var(--ok)} .badge.done{background:#f1f3f7; color:var(--sub)}
+  .badge.type{background:var(--blue-pale); color:var(--blue); margin-left:6px}
+  .sumgrid{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); border-radius:10px; overflow:hidden; border:1px solid var(--line)}
+  .sumcell{background:#fafbfd; padding:10px 8px; text-align:center}
+  .sumcell .l{font-size:10.5px; color:var(--sub); margin-bottom:3px}
+  .sumcell .v{font-size:14px; font-weight:800; color:var(--money)}
+  .sumcell .v.pos{color:var(--ok)} .sumcell .v.neg{color:var(--warn)}
+  @media(max-width:560px){ .sumgrid{grid-template-columns:repeat(2,1fr)} }
+
+  .field{margin-bottom:13px}
+  .field label{display:block; font-size:12px; color:var(--sub); font-weight:600; margin-bottom:5px}
+  .inp,.sel{width:100%; border:1px solid var(--line); border-radius:9px; padding:10px 11px; font-size:13.5px; background:#fbfcfe; font-family:inherit}
+  .inp:focus,.sel:focus{outline:none; border-color:var(--blue); background:#fff; box-shadow:0 0 0 3px rgba(29,91,166,.12)}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+
+  .items{width:100%; border-collapse:collapse; margin-top:6px}
+  .items th{font-size:11px; color:var(--sub); font-weight:700; text-align:left; padding:7px 6px; border-bottom:1.5px solid var(--line); white-space:nowrap}
+  .items td{padding:5px 5px; border-bottom:1px solid #f0f3f7; vertical-align:middle}
+  .items .ti{width:100%; border:1px solid var(--line); border-radius:7px; padding:7px 8px; font-size:12.5px; background:#fff; font-family:inherit}
+  .items .ti.num{text-align:right}
+  .items .amt{font-size:12.5px; font-weight:700; white-space:nowrap; text-align:right; color:var(--money)}
+  .items .del{border:none; background:none; color:#c0392b; cursor:pointer; font-size:15px; padding:2px 4px}
+  .items col.c-no{width:30px} .items col.c-qty{width:62px} .items col.c-price{width:104px} .items col.c-amt{width:104px} .items col.c-del{width:30px}
+  .totbox{margin-top:14px; border-top:1.5px solid var(--line); padding-top:12px}
+  .totrow{display:flex; justify-content:space-between; font-size:13px; padding:3px 0}
+  .totrow.big{font-size:16px; font-weight:800; color:var(--money); border-top:1px solid var(--line); margin-top:6px; padding-top:9px}
+  .scroll{overflow-x:auto; -webkit-overflow-scrolling:touch}
+
+  .litem{display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--line); border-radius:11px; padding:13px 15px; margin-bottom:9px; cursor:pointer}
+  .litem:hover{border-color:var(--blue-l)}
+  .litem .d{flex:1} .litem .d .ti{font-size:14px; font-weight:700} .litem .d .mt{font-size:11.5px; color:var(--sub); margin-top:2px}
+  .litem .amt{font-size:14px; font-weight:800; color:var(--money); white-space:nowrap}
+  .empty{text-align:center; color:var(--sub); font-size:13px; padding:34px 16px; border:1px dashed var(--line); border-radius:12px; background:#fafbfd}
+  .back{font-size:13px; color:var(--blue); background:none; border:none; cursor:pointer; font-weight:700; padding:6px 0; margin-bottom:6px}
+  .pill{display:inline-block; font-size:10.5px; font-weight:700; background:var(--blue-pale); color:var(--blue); padding:2px 8px; border-radius:10px}
+  .soon{text-align:center; color:var(--sub); padding:40px 16px}
+  .soon .big{font-size:34px; margin-bottom:8px}
+  .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px); background:#11233a; color:#fff; font-size:12.5px; padding:10px 18px; border-radius:22px; opacity:0; transition:.25s; z-index:50}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+  .splash{position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:99; flex-direction:column; gap:14px}
+  .spin{width:30px; height:30px; border:3px solid #d3deec; border-top-color:var(--blue); border-radius:50%; animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .denied{text-align:center; padding:60px 24px; color:var(--sub)}
+  .denied .big{font-size:40px; margin-bottom:12px}
+  .denied h2{margin:0 0 6px; font-size:18px; color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="splash" id="splash"><div class="spin"></div><div class="small muted">불러오는 중...</div></div>
+
+<div class="wrap" id="app" style="display:none">
+  <div class="head">
+    <div class="t"><div class="ic">📊</div><h1>기획</h1></div>
+    <div class="tabs">
+      <div class="tab on" data-tab="pjt"    onclick="tab('pjt')">프로젝트</div>
+      <div class="tab"    data-tab="est"    onclick="tab('est')">견적</div>
+      <div class="tab"    data-tab="settle" onclick="tab('settle')">정산</div>
+      <div class="tab"    data-tab="acct"   onclick="tab('acct')">회계</div>
+    </div>
+  </div>
+  <div class="body">
+    <div id="v-pjt"    class="view on"></div>
+    <div id="v-est"    class="view"></div>
+    <div id="v-settle" class="view"></div>
+    <div id="v-acct"   class="view"></div>
+  </div>
+</div>
+
+<div class="wrap" id="denied" style="display:none">
+  <div class="denied"><div class="big">🔒</div><h2 id="denied-t">접근 권한이 없습니다</h2><div id="denied-s">포털에서 로그인 후 기획 메뉴로 접속해 주세요.</div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, onSnapshot, serverTimestamp, query, where }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey:"AIzaSyCyQxBJ_ftfM0ImBXubmqD5gfzFR54iPmE", authDomain:"p4ph2-fab-506a7.firebaseapp.com",
+  projectId:"p4ph2-fab-506a7", storageBucket:"p4ph2-fab-506a7.firebasestorage.app",
+  messagingSenderId:"36946317914", appId:"1:36946317914:web:c6ad5f3a1b98130c99fe63"
+};
+const app=initializeApp(firebaseConfig); const auth=getAuth(app); const db=getFirestore(app);
+
+const $=id=>document.getElementById(id);
+const won=n=>(Math.round(n)||0).toLocaleString('ko-KR');
+const estTotal=e=>(e.items||[]).reduce((s,i)=>s+(i.qty||0)*(i.price||0),0);
+function toast(t){ const e=$('toast'); e.textContent=t; e.classList.add('show'); clearTimeout(e._t); e._t=setTimeout(()=>e.classList.remove('show'),2300); }
+
+let me=null;
+let projects=[];     // {id, code, name, client, type, status}
+let estimates=[];    // {id, pjtId, no, date, title, items[]}
+let settlements=[];  // {id, pjtId, docType:'invoice'|'payment', amount}  (정산 단계에서 채워짐)
+
+const pjtEstSum=pid=>estimates.filter(e=>e.pjtId===pid).reduce((s,e)=>s+estTotal(e),0);
+const pjtBilled=pid=>settlements.filter(s=>s.pjtId===pid&&s.docType==='invoice').reduce((a,s)=>a+(s.amount||0),0);
+const pjtPaid=pid=>settlements.filter(s=>s.pjtId===pid&&s.docType==='payment').reduce((a,s)=>a+(s.amount||0),0);
+
+/* ---------------- 인증 게이트 ---------------- */
+onAuthStateChanged(auth, async user=>{
+  if(!user){ showDenied('로그인이 필요합니다','포털에서 로그인 후 기획 메뉴로 접속해 주세요.'); return; }
+  try{
+    const ps=await getDoc(doc(db,'portal_users',user.uid));
+    if(ps.exists()){
+      const d=ps.data();
+      if(d.status==='approved' && (d.admin===true || (d.perms && d.perms.plan===true))){
+        me={uid:user.uid, ...d}; startApp(); return;
+      }
+    }
+  }catch(e){}
+  showDenied('접근 권한이 없습니다','기획 메뉴 접근 권한이 없습니다. 관리자에게 요청해 주세요.');
+});
+function showDenied(t,s){ $('splash').style.display='none'; $('app').style.display='none'; $('denied-t').textContent=t; $('denied-s').textContent=s; $('denied').style.display='block'; }
+
+function startApp(){
+  $('splash').style.display='none'; $('app').style.display='block';
+  // 실시간 구독
+  onSnapshot(collection(db,'gihoek_projects'), snap=>{
+    projects=[]; snap.forEach(d=>projects.push({id:d.id, ...d.data()}));
+    projects.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
+    if(curTab==='pjt' && !detailId) renderPjt();
+  });
+  onSnapshot(collection(db,'gihoek_estimates'), snap=>{
+    estimates=[]; snap.forEach(d=>estimates.push({id:d.id, ...d.data()}));
+    estimates.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    if(curTab==='pjt') { detailId? pjtDetail(detailId) : renderPjt(); }
+    if(curTab==='est' && !estDraft && !viewEstId) renderEst();
+  });
+  onSnapshot(collection(db,'gihoek_settlements'), snap=>{
+    settlements=[]; snap.forEach(d=>settlements.push({id:d.id, ...d.data()}));
+    if(curTab==='pjt') { detailId? pjtDetail(detailId) : renderPjt(); }
+  });
+  renderPjt();
+}
+
+let curTab='pjt';
+function tab(t){
+  curTab=t; detailId=null; estDraft=null; viewEstId=null;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on', x.dataset.tab===t));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  $('v-'+t).classList.add('on');
+  ({pjt:renderPjt, est:renderEst, settle:renderSettle, acct:renderAcct})[t]();
+  window.scrollTo(0,0);
+}
+
+/* ---------------- 프로젝트 ---------------- */
+let detailId=null;
+const TYPE_LABEL={fcu:'FCU 자동정산', general:'일반(품목)'};
+function renderPjt(){
+  detailId=null;
+  const v=$('v-pjt');
+  v.innerHTML=`
+    <div class="sec-h"><h2>프로젝트</h2><button class="btn pri sm" onclick="addPjt()">+ 프로젝트 등록</button></div>
+    ${projects.length? projects.map(p=>{
+      const est=pjtEstSum(p.id), b=pjtBilled(p.id), pd=pjtPaid(p.id), profit=b-pd;
+      return `<div class="pjt" onclick="pjtDetail('${p.id}')">
+        <div class="pjt-top"><div style="flex:1">
+          <div class="pjt-code">${p.code} <span class="badge type">${TYPE_LABEL[p.type]||'일반'}</span></div>
+          <div class="pjt-name">${p.name||''}</div></div>
+          <span class="badge ${p.status==='done'?'done':'run'}">${p.status==='done'?'종료':'진행중'}</span></div>
+        <div class="sumgrid">
+          <div class="sumcell"><div class="l">견적</div><div class="v">${won(est)}</div></div>
+          <div class="sumcell"><div class="l">청구</div><div class="v">${won(b)}</div></div>
+          <div class="sumcell"><div class="l">지급</div><div class="v">${won(pd)}</div></div>
+          <div class="sumcell"><div class="l">손익</div><div class="v ${profit>=0?'pos':'neg'}">${profit>=0?'+':''}${won(profit)}</div></div>
+        </div></div>`;
+    }).join('') : '<div class="empty">등록된 프로젝트가 없습니다. “프로젝트 등록”으로 추가하세요.</div>'}
+    <div class="small muted center" style="margin-top:8px">금액 단위: 원 · 청구·지급·손익은 정산 입력 시 자동 집계됩니다</div>`;
+}
+window.pjtDetail=function(id){
+  detailId=id;
+  const p=projects.find(x=>x.id===id); if(!p){ renderPjt(); return; }
+  const ests=estimates.filter(e=>e.pjtId===id);
+  const est=pjtEstSum(id), b=pjtBilled(id), pd=pjtPaid(id), profit=b-pd;
+  $('v-pjt').innerHTML=`
+    <button class="back" onclick="renderPjtList()">← 프로젝트 목록</button>
+    <div class="card">
+      <div style="display:flex; align-items:flex-start; gap:10px">
+        <div style="flex:1"><div class="pjt-code">${p.code} <span class="badge type">${TYPE_LABEL[p.type]||'일반'}</span></div><div class="pjt-name">${p.name||''}</div></div>
+        <span class="badge ${p.status==='done'?'done':'run'}">${p.status==='done'?'종료':'진행중'}</span>
+      </div>
+      <div style="margin-top:12px; display:flex; gap:8px">
+        <button class="btn gray sm" onclick="editPjt('${p.id}')">정보 수정</button>
+        <button class="btn gray sm" onclick="delPjt('${p.id}')">삭제</button>
+      </div>
+    </div>
+    <div class="sec-h" style="margin-top:18px"><h2>요약</h2></div>
+    <div class="sumgrid">
+      <div class="sumcell"><div class="l">견적 합계</div><div class="v">${won(est)}</div></div>
+      <div class="sumcell"><div class="l">청구 누계</div><div class="v">${won(b)}</div></div>
+      <div class="sumcell"><div class="l">지급 누계</div><div class="v">${won(pd)}</div></div>
+      <div class="sumcell"><div class="l">실현 손익</div><div class="v ${profit>=0?'pos':'neg'}">${profit>=0?'+':''}${won(profit)}</div></div>
+    </div>
+    <div class="sec-h" style="margin-top:22px"><h2>견적 내역 (${ests.length})</h2><button class="btn line sm" onclick="newEst('${id}')">+ 견적 작성</button></div>
+    ${ests.length? ests.map(e=>`<div class="litem" onclick="openEst('${e.id}')"><div class="d"><div class="ti">${e.title}</div><div class="mt">${e.no} · ${e.date}</div></div><div class="amt">${won(estTotal(e))}</div></div>`).join('') : '<div class="empty">아직 견적이 없습니다.</div>'}`;
+  window.scrollTo(0,0);
+};
+window.renderPjtList=renderPjt;
+window.addPjt=function(){ openPjtForm(null); };
+window.editPjt=function(id){ openPjtForm(projects.find(p=>p.id===id)); };
+function openPjtForm(p){
+  detailId=p?p.id:null;
+  $('v-pjt').innerHTML=`
+    <button class="back" onclick="${p?`pjtDetail('${p.id}')`:'renderPjtList()'}">← 뒤로</button>
+    <div class="card">
+      <div class="sec-h"><h2>${p?'프로젝트 수정':'프로젝트 등록'}</h2></div>
+      <div class="field"><label>PJT 코드</label><input class="inp" id="pf-code" placeholder="예: P4 Ph5 (XXX)" value="${p?.code||''}"></div>
+      <div class="field"><label>설명</label><input class="inp" id="pf-name" placeholder="예: 귀뚜라미범양냉방 · FCU 설치" value="${p?.name||''}"></div>
+      <div class="field"><label>발주처</label><input class="inp" id="pf-client" placeholder="예: 범양냉방" value="${p?.client||''}"></div>
+      <div class="row2">
+        <div class="field"><label>정산 방식</label><select class="sel" id="pf-type">
+          <option value="general" ${p?.type==='general'?'selected':''}>일반 (품목 직접 입력)</option>
+          <option value="fcu" ${p?.type==='fcu'?'selected':''}>FCU 자동정산 (공정·공수 연동)</option>
+        </select></div>
+        <div class="field"><label>상태</label><select class="sel" id="pf-status">
+          <option value="run" ${p?.status!=='done'?'selected':''}>진행중</option>
+          <option value="done" ${p?.status==='done'?'selected':''}>종료</option>
+        </select></div>
+      </div>
+      <div class="small muted" style="margin:-4px 0 12px">정산 방식은 정산 탭에서 열리는 양식을 결정합니다. FCU는 P4 Ph2 전용 자동계산, 일반은 품목식 정산서입니다.</div>
+      <div style="display:flex; gap:8px">
+        <button class="btn line full" onclick="${p?`pjtDetail('${p.id}')`:'renderPjtList()'}">취소</button>
+        <button class="btn pri full" onclick="savePjt('${p?p.id:''}')">저장</button>
+      </div>
+    </div>`;
+  window.scrollTo(0,0);
+}
+window.savePjt=async function(id){
+  const code=$('pf-code').value.trim(); if(!code){ toast('PJT 코드를 입력하세요.'); return; }
+  const data={ code, name:$('pf-name').value.trim(), client:$('pf-client').value.trim(), type:$('pf-type').value, status:$('pf-status').value };
+  try{
+    if(id){ await setDoc(doc(db,'gihoek_projects',id), data, {merge:true}); toast('수정했습니다.'); pjtDetail(id); }
+    else{ const nid='pjt_'+Date.now(); await setDoc(doc(db,'gihoek_projects',nid), {...data, createdAt:serverTimestamp()}); toast('프로젝트를 등록했습니다.'); renderPjt(); }
+  }catch(e){ toast('저장 실패: '+(e.code||e.message)); }
+};
+window.delPjt=async function(id){
+  if(!confirm('이 프로젝트를 삭제할까요? (견적·정산 데이터는 남습니다)')) return;
+  try{ await deleteDoc(doc(db,'gihoek_projects',id)); toast('삭제했습니다.'); renderPjt(); }catch(e){ toast('삭제 실패: '+(e.code||e.message)); }
+};
+
+/* ---------------- 견적 ---------------- */
+let estDraft=null, viewEstId=null;
+function renderEst(){
+  estDraft=null; viewEstId=null;
+  $('v-est').innerHTML=`
+    <div class="sec-h"><h2>견적</h2><button class="btn pri sm" onclick="newEst()">+ 견적 작성</button></div>
+    ${estimates.length? estimates.map(e=>{ const p=projects.find(x=>x.id===e.pjtId);
+      return `<div class="litem" onclick="openEst('${e.id}')"><div class="d"><div class="ti">${e.title}</div><div class="mt"><span class="pill">${p?p.code:'삭제된 PJT'}</span> &nbsp;${e.no} · ${e.date}</div></div><div class="amt">${won(estTotal(e))}</div></div>`;
+    }).join('') : '<div class="empty">작성된 견적이 없습니다.</div>'}`;
+}
+window.newEst=function(pjtId){
+  if(!projects.length){ toast('먼저 프로젝트를 등록하세요.'); tab('pjt'); return; }
+  estDraft={ pjtId:pjtId||projects[0].id, title:'', date:new Date().toISOString().slice(0,10),
+    items:[{name:'',spec:'',qty:1,price:0},{name:'',spec:'',qty:1,price:0}] };
+  tabSwitchSilent('est'); drawEstForm();
+};
+function tabSwitchSilent(t){ curTab=t; document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on', x.dataset.tab===t)); document.querySelectorAll('.view').forEach(v=>v.classList.remove('on')); $('v-'+t).classList.add('on'); }
+function drawEstForm(){
+  const d=estDraft;
+  $('v-est').innerHTML=`
+    <button class="back" onclick="renderEst()">← 견적 목록</button>
+    <div class="card">
+      <div class="row2">
+        <div class="field"><label>프로젝트</label><select class="sel" id="ed-pjt" onchange="estDraft.pjtId=this.value">
+          ${projects.map(p=>`<option value="${p.id}" ${p.id===d.pjtId?'selected':''}>${p.code}</option>`).join('')}</select></div>
+        <div class="field"><label>작성일</label><input class="inp" type="date" value="${d.date}" onchange="estDraft.date=this.value"></div>
+      </div>
+      <div class="field"><label>견적 제목</label><input class="inp" id="ed-title" placeholder="예: FCU 설치 1차 견적" value="${d.title}" oninput="estDraft.title=this.value"></div>
+      <label style="font-size:12px;color:var(--sub);font-weight:600">품목</label>
+      <div class="scroll"><table class="items">
+        <colgroup><col class="c-no"><col><col><col class="c-qty"><col class="c-price"><col class="c-amt"><col class="c-del"></colgroup>
+        <thead><tr><th>#</th><th>품명</th><th>규격</th><th>수량</th><th>단가</th><th>금액</th><th></th></tr></thead>
+        <tbody id="est-rows"></tbody></table></div>
+      <button class="btn gray sm" style="margin-top:10px" onclick="addRow()">+ 품목 추가</button>
+      <div class="totbox" id="est-tot"></div>
+      <div style="display:flex; gap:8px; margin-top:16px">
+        <button class="btn line full" onclick="renderEst()">취소</button>
+        <button class="btn pri full" id="est-save" onclick="saveEst()">저장</button>
+      </div>
+    </div>`;
+  drawRows(); window.scrollTo(0,0);
+}
+function drawRows(){
+  $('est-rows').innerHTML=estDraft.items.map((it,i)=>`<tr>
+    <td class="muted small">${i+1}</td>
+    <td><input class="ti" value="${it.name}" placeholder="품명" oninput="upd(${i},'name',this.value)"></td>
+    <td><input class="ti" value="${it.spec}" placeholder="규격" oninput="upd(${i},'spec',this.value)"></td>
+    <td><input class="ti num" type="number" value="${it.qty}" oninput="upd(${i},'qty',this.value)"></td>
+    <td><input class="ti num" type="number" value="${it.price}" oninput="upd(${i},'price',this.value)"></td>
+    <td class="amt">${won((it.qty||0)*(it.price||0))}</td>
+    <td><button class="del" onclick="delRow(${i})">×</button></td></tr>`).join('');
+  drawTot();
+}
+function drawTot(){
+  const sup=estDraft.items.reduce((s,i)=>s+(i.qty||0)*(i.price||0),0); const vat=Math.round(sup*0.1);
+  $('est-tot').innerHTML=`<div class="totrow"><span class="muted">공급가액</span><span>${won(sup)} 원</span></div>
+    <div class="totrow"><span class="muted">부가세 (10%)</span><span>${won(vat)} 원</span></div>
+    <div class="totrow big"><span>합계금액</span><span>${won(sup+vat)} 원</span></div>`;
+}
+window.upd=function(i,k,val){ estDraft.items[i][k]=(k==='qty'||k==='price')?(parseFloat(val)||0):val; (k==='qty'||k==='price')?drawRows():drawTot(); };
+window.addRow=function(){ estDraft.items.push({name:'',spec:'',qty:1,price:0}); drawRows(); };
+window.delRow=function(i){ estDraft.items.splice(i,1); if(!estDraft.items.length) estDraft.items.push({name:'',spec:'',qty:1,price:0}); drawRows(); };
+window.saveEst=async function(){
+  const d=estDraft; if(!d.title.trim()){ toast('견적 제목을 입력하세요.'); return; }
+  const items=d.items.filter(i=>i.name.trim()); if(!items.length){ toast('품목을 1개 이상 입력하세요.'); return; }
+  const yr=d.date.slice(0,4);
+  const cnt=estimates.filter(e=>(e.no||'').startsWith('EST-'+yr)).length+1;
+  const no='EST-'+yr+'-'+String(cnt).padStart(3,'0');
+  const id='est_'+Date.now();
+  $('est-save').disabled=true;
+  try{ await setDoc(doc(db,'gihoek_estimates',id), {pjtId:d.pjtId, no, date:d.date, title:d.title.trim(), items, createdAt:serverTimestamp()}); toast('견적을 저장했습니다.'); renderEst(); }
+  catch(e){ $('est-save').disabled=false; toast('저장 실패: '+(e.code||e.message)); }
+};
+window.openEst=function(id){
+  viewEstId=id; const e=estimates.find(x=>x.id===id); if(!e){ renderEst(); return; }
+  const p=projects.find(x=>x.id===e.pjtId); const sup=estTotal(e), vat=Math.round(sup*0.1);
+  tabSwitchSilent('est');
+  $('v-est').innerHTML=`
+    <button class="back" onclick="renderEst()">← 견적 목록</button>
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start">
+        <div><div style="font-size:16px;font-weight:800">${e.title}</div><div class="small muted" style="margin-top:3px"><span class="pill">${p?p.code:'-'}</span> &nbsp;${e.no} · ${e.date}</div></div>
+        <button class="btn gray sm" onclick="delEst('${e.id}')">삭제</button>
+      </div>
+      <div class="scroll" style="margin-top:14px"><table class="items">
+        <thead><tr><th>#</th><th>품명</th><th>규격</th><th class="right">수량</th><th class="right">단가</th><th class="right">금액</th></tr></thead>
+        <tbody>${e.items.map((it,i)=>`<tr><td class="muted small">${i+1}</td><td>${it.name}</td><td class="muted">${it.spec||'-'}</td><td class="right">${won(it.qty)}</td><td class="right">${won(it.price)}</td><td class="amt">${won(it.qty*it.price)}</td></tr>`).join('')}</tbody>
+      </table></div>
+      <div class="totbox">
+        <div class="totrow"><span class="muted">공급가액</span><span>${won(sup)} 원</span></div>
+        <div class="totrow"><span class="muted">부가세 (10%)</span><span>${won(vat)} 원</span></div>
+        <div class="totrow big"><span>합계금액</span><span>${won(sup+vat)} 원</span></div>
+      </div>
+    </div>`;
+  window.scrollTo(0,0);
+};
+window.delEst=async function(id){ if(!confirm('이 견적을 삭제할까요?')) return; try{ await deleteDoc(doc(db,'gihoek_estimates',id)); toast('삭제했습니다.'); renderEst(); }catch(e){ toast('삭제 실패: '+(e.code||e.message)); } };
+
+/* ---------------- 정산 / 회계 (다음 단계) ---------------- */
+function renderSettle(){ $('v-settle').innerHTML=`<div class="soon"><div class="big">🧾</div><div style="font-weight:700;color:var(--ink)">정산 — 준비 중</div><div class="small" style="margin-top:6px">대금청구서·지급예정서를 PJT별로 작성·조회합니다.<br>다음 단계에서 추가됩니다.</div></div>`; }
+function renderAcct(){ $('v-acct').innerHTML=`<div class="soon"><div class="big">📒</div><div style="font-weight:700;color:var(--ink)">회계 — 준비 중</div><div class="small" style="margin-top:6px">개별 손익 · 종합 현황 · 회계장부를 제공합니다.<br>정산 다음 단계에서 추가됩니다.</div></div>`; }
+
+window.tab=tab; window.renderEst=renderEst;
+</script>
+</body>
+</html>
