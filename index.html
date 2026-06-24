@@ -274,14 +274,14 @@ window.renderEst=renderEst;
 window.newEst=function(pjtId){
   if(!projects.length){ toast('먼저 프로젝트를 등록하세요.'); tab('pjt'); return; }
   const sup=supplierList(), cli=clientList();
-  estDraft={ editId:null, no:null, pjtId:pjtId||projects[0].id, title:'', date:new Date().toISOString().slice(0,10),
+  estDraft={ editId:null, no:null, pjtId:pjtId||projects[0].id, title:'', author:'', date:new Date().toISOString().slice(0,10),
     clientId: cli[0]?.id||'', issuerId: (sup.find(c=>c.company==='제이에이치솔루션')?.id) || sup[0]?.id || '',
     items:[{name:'',spec:'',qty:1,price:0,amount:0},{name:'',spec:'',qty:1,price:0,amount:0}] };
   tabSilent('est'); drawEstForm();
 };
 window.editEst=function(id){
   const e=estimates.find(x=>x.id===id); if(!e){ renderEst(); return; }
-  estDraft={ editId:e.id, baseNo:e.baseNo||e.no, srcNo:e.no, srcRev:e.rev||1, pjtId:e.pjtId, title:e.title||'', date:e.date||new Date().toISOString().slice(0,10),
+  estDraft={ editId:e.id, baseNo:e.baseNo||e.no, srcNo:e.no, srcRev:e.rev||1, pjtId:e.pjtId, title:e.title||'', author:e.author||'', date:e.date||new Date().toISOString().slice(0,10),
     clientId:e.clientId||'', issuerId:e.issuerId||(supplierList().find(c=>c.company==='제이에이치솔루션')?.id)||'',
     items:(e.items&&e.items.length)? e.items.map(i=>({name:i.name||'',spec:i.spec||'',qty:i.qty||0,price:i.price||0,amount:Math.round(itemAmt(i))})) : [{name:'',spec:'',qty:1,price:0,amount:0}] };
   viewEstId=null; tabSilent('est'); drawEstForm();
@@ -303,6 +303,7 @@ function drawEstForm(){ const d=estDraft;
     </div>
     <div class="field" style="margin-top:-4px"><button class="btn gray sm" onclick="tab('comp')">+ 거래처 추가·관리</button></div>
     <div class="field"><label>견적 제목</label><input class="inp" id="ed-title" placeholder="예: FCU 설치 1차 견적" value="${d.title}" oninput="setDraft('title',this.value)"></div>
+    <div class="field"><label>작성자 <span class="small muted" style="font-weight:500">(비우면 로그인 계정명 사용)</span></label><input class="inp" id="ed-author" placeholder="${((me&&me.name)||'작성자')}" value="${(d.author||'').replace(/"/g,'&quot;')}" oninput="setDraft('author',this.value)"></div>
     <label style="font-size:12px;color:var(--sub);font-weight:600">품목</label>
     <div class="scroll"><table class="items">
       <colgroup><col class="c-no"><col><col><col class="c-qty"><col class="c-price"><col class="c-amt"><col class="c-del"></colgroup>
@@ -356,7 +357,7 @@ window.saveEst=async function(){ const d=estDraft;
   const items=d.items.filter(i=>(i.name||'').trim()).map(i=>({name:i.name.trim(),spec:i.spec||'',qty:i.qty||0,price:i.price||0,amount:Math.round(itemAmt(i))}));
   if(!items.length){ toast('품목을 1개 이상 입력하세요.'); return; }
   const cl=compById(d.clientId); const iss=compById(d.issuerId);
-  const author=(me&&me.name)||'', authorUid=(me&&me.uid)||'';
+  const author=((d.author&&d.author.trim())) || (me&&me.name) || '', authorUid=(me&&me.uid)||'';
   let no, rev, baseNo;
   if(d.editId){
     baseNo=d.baseNo;
