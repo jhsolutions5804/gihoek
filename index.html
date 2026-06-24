@@ -14,7 +14,6 @@
   html,body{margin:0; height:100%}
   body{font-family:-apple-system,"Apple SD Gothic Neo","Pretendard",sans-serif; background:var(--bg); color:var(--ink); line-height:1.5; font-size:14px}
   .wrap{max-width:900px; margin:0 auto; min-height:100vh; background:var(--bg)}
-
   .head{background:var(--card); border-bottom:1px solid var(--line); padding:16px 20px 0; position:sticky; top:0; z-index:10}
   .head .t{display:flex; align-items:center; gap:9px; margin-bottom:12px}
   .head .t h1{margin:0; font-size:18px; font-weight:800}
@@ -22,10 +21,8 @@
   .tabs{display:flex; gap:2px}
   .tab{padding:11px 16px; font-size:13.5px; font-weight:700; color:var(--sub); cursor:pointer; border-bottom:2.5px solid transparent; white-space:nowrap}
   .tab.on{color:var(--blue); border-bottom-color:var(--blue)}
-
   .body{padding:20px}
   .view{display:none} .view.on{display:block}
-
   .card{background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:16px}
   .btn{border:none; border-radius:9px; padding:11px 16px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit}
   .btn:disabled{opacity:.55}
@@ -37,7 +34,6 @@
   .sec-h{display:flex; align-items:center; justify-content:space-between; margin:0 0 14px}
   .sec-h h2{margin:0; font-size:15px; font-weight:800}
   .muted{color:var(--sub)} .small{font-size:12px} .right{text-align:right} .center{text-align:center}
-
   .pjt{background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:16px 16px 14px; margin-bottom:12px; cursor:pointer; transition:.13s}
   .pjt:hover{border-color:var(--blue-l)}
   .pjt-top{display:flex; align-items:flex-start; gap:10px; margin-bottom:13px}
@@ -52,26 +48,23 @@
   .sumcell .v{font-size:14px; font-weight:800; color:var(--money)}
   .sumcell .v.pos{color:var(--ok)} .sumcell .v.neg{color:var(--warn)}
   @media(max-width:560px){ .sumgrid{grid-template-columns:repeat(2,1fr)} }
-
   .field{margin-bottom:13px}
   .field label{display:block; font-size:12px; color:var(--sub); font-weight:600; margin-bottom:5px}
   .inp,.sel{width:100%; border:1px solid var(--line); border-radius:9px; padding:10px 11px; font-size:13.5px; background:#fbfcfe; font-family:inherit}
   .inp:focus,.sel:focus{outline:none; border-color:var(--blue); background:#fff; box-shadow:0 0 0 3px rgba(29,91,166,.12)}
   .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
-
   .items{width:100%; border-collapse:collapse; margin-top:6px}
   .items th{font-size:11px; color:var(--sub); font-weight:700; text-align:left; padding:7px 6px; border-bottom:1.5px solid var(--line); white-space:nowrap}
   .items td{padding:5px 5px; border-bottom:1px solid #f0f3f7; vertical-align:middle}
   .items .ti{width:100%; border:1px solid var(--line); border-radius:7px; padding:7px 8px; font-size:12.5px; background:#fff; font-family:inherit}
   .items .ti.num{text-align:right}
-  .items .amt{font-size:12.5px; font-weight:700; white-space:nowrap; text-align:right; color:var(--money)}
   .items .del{border:none; background:none; color:#c0392b; cursor:pointer; font-size:15px; padding:2px 4px}
-  .items col.c-no{width:30px} .items col.c-qty{width:62px} .items col.c-price{width:104px} .items col.c-amt{width:104px} .items col.c-del{width:30px}
+  .items col.c-no{width:28px} .items col.c-qty{width:60px} .items col.c-price{width:108px} .items col.c-amt{width:120px} .items col.c-del{width:28px}
   .totbox{margin-top:14px; border-top:1.5px solid var(--line); padding-top:12px}
-  .totrow{display:flex; justify-content:space-between; font-size:13px; padding:3px 0}
-  .totrow.big{font-size:16px; font-weight:800; color:var(--money); border-top:1px solid var(--line); margin-top:6px; padding-top:9px}
+  .totrow{display:flex; justify-content:space-between; align-items:center; font-size:13px; padding:4px 0}
+  .totrow .tinp{width:170px; border:1px solid var(--blue-l); border-radius:8px; padding:8px 10px; font-size:15px; font-weight:800; text-align:right; color:var(--money); background:#f4f9ff; font-family:inherit}
+  .totrow.big{font-size:15px; font-weight:800; color:var(--money); border-top:1px solid var(--line); margin-top:6px; padding-top:10px}
   .scroll{overflow-x:auto; -webkit-overflow-scrolling:touch}
-
   .litem{display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--line); border-radius:11px; padding:13px 15px; margin-bottom:9px; cursor:pointer}
   .litem:hover{border-color:var(--blue-l)}
   .litem .d{flex:1} .litem .d .ti{font-size:14px; font-weight:700} .litem .d .mt{font-size:11.5px; color:var(--sub); margin-top:2px}
@@ -79,6 +72,12 @@
   .empty{text-align:center; color:var(--sub); font-size:13px; padding:34px 16px; border:1px dashed var(--line); border-radius:12px; background:#fafbfd}
   .back{font-size:13px; color:var(--blue); background:none; border:none; cursor:pointer; font-weight:700; padding:6px 0; margin-bottom:6px}
   .pill{display:inline-block; font-size:10.5px; font-weight:700; background:var(--blue-pale); color:var(--blue); padding:2px 8px; border-radius:10px}
+  .partybox{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0}
+  @media(max-width:560px){ .partybox{grid-template-columns:1fr} }
+  .party{border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:#fafbfd}
+  .party .pl{font-size:10.5px; font-weight:700; color:var(--sub); letter-spacing:.5px; margin-bottom:6px}
+  .party .pc{font-size:13.5px; font-weight:800; color:var(--ink)}
+  .party .pd{font-size:11.5px; color:var(--sub); margin-top:2px}
   .soon{text-align:center; color:var(--sub); padding:40px 16px}
   .soon .big{font-size:34px; margin-bottom:8px}
   .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px); background:#11233a; color:#fff; font-size:12.5px; padding:10px 18px; border-radius:22px; opacity:0; transition:.25s; z-index:50}
@@ -87,8 +86,7 @@
   .spin{width:30px; height:30px; border:3px solid #d3deec; border-top-color:var(--blue); border-radius:50%; animation:sp 1s linear infinite}
   @keyframes sp{to{transform:rotate(360deg)}}
   .denied{text-align:center; padding:60px 24px; color:var(--sub)}
-  .denied .big{font-size:40px; margin-bottom:12px}
-  .denied h2{margin:0 0 6px; font-size:18px; color:var(--ink)}
+  .denied .big{font-size:40px; margin-bottom:12px} .denied h2{margin:0 0 6px; font-size:18px; color:var(--ink)}
 </style>
 </head>
 <body>
@@ -121,7 +119,7 @@
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, onSnapshot, serverTimestamp, query, where }
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, onSnapshot, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig = {
@@ -133,263 +131,321 @@ const app=initializeApp(firebaseConfig); const auth=getAuth(app); const db=getFi
 
 const $=id=>document.getElementById(id);
 const won=n=>(Math.round(n)||0).toLocaleString('ko-KR');
-const estTotal=e=>(e.items||[]).reduce((s,i)=>s+(i.qty||0)*(i.price||0),0);
+const num=v=>{ const n=parseFloat(String(v).replace(/[^0-9.\-]/g,'')); return isNaN(n)?0:n; };
+const itemAmt=it=> (it.amount!=null ? it.amount : (it.qty||0)*(it.price||0));
+const estSupply=e=>(e.items||[]).reduce((s,i)=>s+itemAmt(i),0);
+const estTotal =e=>{ const s=estSupply(e); return s+Math.round(s*0.1); };
 function toast(t){ const e=$('toast'); e.textContent=t; e.classList.add('show'); clearTimeout(e._t); e._t=setTimeout(()=>e.classList.remove('show'),2300); }
 
 let me=null;
-let projects=[];     // {id, code, name, client, type, status}
-let estimates=[];    // {id, pjtId, no, date, title, items[]}
-let settlements=[];  // {id, pjtId, docType:'invoice'|'payment', amount}  (정산 단계에서 채워짐)
+let projects=[], estimates=[], settlements=[], clients=[], issuers=[];
 
-const pjtEstSum=pid=>estimates.filter(e=>e.pjtId===pid).reduce((s,e)=>s+estTotal(e),0);
+const pjtEstSum=pid=>estimates.filter(e=>e.pjtId===pid).reduce((s,e)=>s+estSupply(e),0);
 const pjtBilled=pid=>settlements.filter(s=>s.pjtId===pid&&s.docType==='invoice').reduce((a,s)=>a+(s.amount||0),0);
-const pjtPaid=pid=>settlements.filter(s=>s.pjtId===pid&&s.docType==='payment').reduce((a,s)=>a+(s.amount||0),0);
+const pjtPaid =pid=>settlements.filter(s=>s.pjtId===pid&&s.docType==='payment').reduce((a,s)=>a+(s.amount||0),0);
 
-/* ---------------- 인증 게이트 ---------------- */
+const SEED_ISSUERS=[
+  {id:'jhsol', company:'제이에이치솔루션', ceo:'김종화', bizno:'383-09-02847', tel:'010-6650-5804', email:'jh.kim@jhsol.kr', address:''},
+  {id:'jheng', company:'제이에이치이엔지', ceo:'김영희', bizno:'', tel:'010-3735-7891', email:'butterfly313@naver.com', address:''},
+];
+const SEED_CLIENTS=[
+  {id:'darim', company:'다람이엔지', ceo:'현병찬', bizno:'', tel:'010-8363-1085', email:'skyhbc@naver.com', address:''},
+  {id:'sj',    company:'에스제이',   ceo:'서민우', bizno:'', tel:'010-8456-1098', email:'seoyo20@naver.com', address:''},
+  {id:'jheng', company:'제이에이치이엔지', ceo:'김영희', bizno:'', tel:'010-3735-7891', email:'butterfly313@naver.com', address:''},
+];
+
 onAuthStateChanged(auth, async user=>{
   if(!user){ showDenied('로그인이 필요합니다','포털에서 로그인 후 기획 메뉴로 접속해 주세요.'); return; }
   try{
     const ps=await getDoc(doc(db,'portal_users',user.uid));
-    if(ps.exists()){
-      const d=ps.data();
-      if(d.status==='approved' && (d.admin===true || (d.perms && d.perms.plan===true))){
-        me={uid:user.uid, ...d}; startApp(); return;
-      }
-    }
+    if(ps.exists()){ const d=ps.data();
+      if(d.status==='approved' && (d.admin===true || (d.perms&&d.perms.plan===true))){ me={uid:user.uid,...d}; await startApp(); return; } }
   }catch(e){}
   showDenied('접근 권한이 없습니다','기획 메뉴 접근 권한이 없습니다. 관리자에게 요청해 주세요.');
 });
 function showDenied(t,s){ $('splash').style.display='none'; $('app').style.display='none'; $('denied-t').textContent=t; $('denied-s').textContent=s; $('denied').style.display='block'; }
 
-function startApp(){
+async function startApp(){
   $('splash').style.display='none'; $('app').style.display='block';
-  // 실시간 구독
-  onSnapshot(collection(db,'gihoek_projects'), snap=>{
-    projects=[]; snap.forEach(d=>projects.push({id:d.id, ...d.data()}));
-    projects.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
-    if(curTab==='pjt' && !detailId) renderPjt();
-  });
-  onSnapshot(collection(db,'gihoek_estimates'), snap=>{
-    estimates=[]; snap.forEach(d=>estimates.push({id:d.id, ...d.data()}));
-    estimates.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-    if(curTab==='pjt') { detailId? pjtDetail(detailId) : renderPjt(); }
-    if(curTab==='est' && !estDraft && !viewEstId) renderEst();
-  });
-  onSnapshot(collection(db,'gihoek_settlements'), snap=>{
-    settlements=[]; snap.forEach(d=>settlements.push({id:d.id, ...d.data()}));
-    if(curTab==='pjt') { detailId? pjtDetail(detailId) : renderPjt(); }
-  });
+  try{
+    const isnap=await getDocs(collection(db,'gihoek_issuers'));
+    if(isnap.empty){ for(const x of SEED_ISSUERS){ const {id,...r}=x; await setDoc(doc(db,'gihoek_issuers',id),r); } }
+    const csnap=await getDocs(collection(db,'gihoek_clients'));
+    if(csnap.empty){ for(const x of SEED_CLIENTS){ const {id,...r}=x; await setDoc(doc(db,'gihoek_clients',id),r); } }
+  }catch(e){}
+  onSnapshot(collection(db,'gihoek_projects'), s=>{ projects=[]; s.forEach(d=>projects.push({id:d.id,...d.data()})); projects.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0)); if(curTab==='pjt'&&!detailId&&!pjtForm) renderPjt(); });
+  onSnapshot(collection(db,'gihoek_estimates'), s=>{ estimates=[]; s.forEach(d=>estimates.push({id:d.id,...d.data()})); estimates.sort((a,b)=>(b.date||'').localeCompare(a.date||'')); if(curTab==='pjt'&&detailId) pjtDetail(detailId); else if(curTab==='pjt'&&!pjtForm) renderPjt(); if(curTab==='est'&&!estDraft&&!viewEstId&&!clientMgr) renderEst(); });
+  onSnapshot(collection(db,'gihoek_settlements'), s=>{ settlements=[]; s.forEach(d=>settlements.push({id:d.id,...d.data()})); if(curTab==='pjt') { detailId?pjtDetail(detailId):renderPjt(); } });
+  onSnapshot(collection(db,'gihoek_clients'), s=>{ clients=[]; s.forEach(d=>clients.push({id:d.id,...d.data()})); });
+  onSnapshot(collection(db,'gihoek_issuers'), s=>{ issuers=[]; s.forEach(d=>issuers.push({id:d.id,...d.data()})); });
   renderPjt();
 }
 
 let curTab='pjt';
-function tab(t){
-  curTab=t; detailId=null; estDraft=null; viewEstId=null;
+function tab(t){ curTab=t; detailId=null; estDraft=null; viewEstId=null; pjtForm=false; clientMgr=false;
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on', x.dataset.tab===t));
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
-  $('v-'+t).classList.add('on');
-  ({pjt:renderPjt, est:renderEst, settle:renderSettle, acct:renderAcct})[t]();
-  window.scrollTo(0,0);
-}
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on')); $('v-'+t).classList.add('on');
+  ({pjt:renderPjt, est:renderEst, settle:renderSettle, acct:renderAcct})[t](); window.scrollTo(0,0); }
+function tabSilent(t){ curTab=t; document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on', x.dataset.tab===t)); document.querySelectorAll('.view').forEach(v=>v.classList.remove('on')); $('v-'+t).classList.add('on'); }
 
 /* ---------------- 프로젝트 ---------------- */
-let detailId=null;
+let detailId=null, pjtForm=false;
 const TYPE_LABEL={fcu:'FCU 자동정산', general:'일반(품목)'};
-function renderPjt(){
-  detailId=null;
-  const v=$('v-pjt');
-  v.innerHTML=`
-    <div class="sec-h"><h2>프로젝트</h2><button class="btn pri sm" onclick="addPjt()">+ 프로젝트 등록</button></div>
-    ${projects.length? projects.map(p=>{
-      const est=pjtEstSum(p.id), b=pjtBilled(p.id), pd=pjtPaid(p.id), profit=b-pd;
-      return `<div class="pjt" onclick="pjtDetail('${p.id}')">
-        <div class="pjt-top"><div style="flex:1">
-          <div class="pjt-code">${p.code} <span class="badge type">${TYPE_LABEL[p.type]||'일반'}</span></div>
-          <div class="pjt-name">${p.name||''}</div></div>
-          <span class="badge ${p.status==='done'?'done':'run'}">${p.status==='done'?'종료':'진행중'}</span></div>
-        <div class="sumgrid">
-          <div class="sumcell"><div class="l">견적</div><div class="v">${won(est)}</div></div>
-          <div class="sumcell"><div class="l">청구</div><div class="v">${won(b)}</div></div>
-          <div class="sumcell"><div class="l">지급</div><div class="v">${won(pd)}</div></div>
-          <div class="sumcell"><div class="l">손익</div><div class="v ${profit>=0?'pos':'neg'}">${profit>=0?'+':''}${won(profit)}</div></div>
-        </div></div>`;
-    }).join('') : '<div class="empty">등록된 프로젝트가 없습니다. “프로젝트 등록”으로 추가하세요.</div>'}
-    <div class="small muted center" style="margin-top:8px">금액 단위: 원 · 청구·지급·손익은 정산 입력 시 자동 집계됩니다</div>`;
+function renderPjt(){ detailId=null; pjtForm=false;
+  $('v-pjt').innerHTML=`<div class="sec-h"><h2>프로젝트</h2><button class="btn pri sm" onclick="addPjt()">+ 프로젝트 등록</button></div>
+  ${projects.length? projects.map(p=>{ const est=pjtEstSum(p.id), b=pjtBilled(p.id), pd=pjtPaid(p.id), pr=b-pd;
+    return `<div class="pjt" onclick="pjtDetail('${p.id}')"><div class="pjt-top"><div style="flex:1">
+      <div class="pjt-code">${p.code} <span class="badge type">${TYPE_LABEL[p.type]||'일반'}</span></div>
+      <div class="pjt-name">${p.name||''}</div></div><span class="badge ${p.status==='done'?'done':'run'}">${p.status==='done'?'종료':'진행중'}</span></div>
+      <div class="sumgrid"><div class="sumcell"><div class="l">견적</div><div class="v">${won(est)}</div></div>
+      <div class="sumcell"><div class="l">청구</div><div class="v">${won(b)}</div></div>
+      <div class="sumcell"><div class="l">지급</div><div class="v">${won(pd)}</div></div>
+      <div class="sumcell"><div class="l">손익</div><div class="v ${pr>=0?'pos':'neg'}">${pr>=0?'+':''}${won(pr)}</div></div></div></div>`;
+  }).join('') : '<div class="empty">등록된 프로젝트가 없습니다. “프로젝트 등록”으로 추가하세요.</div>'}
+  <div class="small muted center" style="margin-top:8px">금액 단위: 원 · 청구·지급·손익은 정산 입력 시 자동 집계</div>`;
 }
-window.pjtDetail=function(id){
-  detailId=id;
+window.pjtDetail=function(id){ detailId=id; pjtForm=false;
   const p=projects.find(x=>x.id===id); if(!p){ renderPjt(); return; }
-  const ests=estimates.filter(e=>e.pjtId===id);
-  const est=pjtEstSum(id), b=pjtBilled(id), pd=pjtPaid(id), profit=b-pd;
-  $('v-pjt').innerHTML=`
-    <button class="back" onclick="renderPjtList()">← 프로젝트 목록</button>
-    <div class="card">
-      <div style="display:flex; align-items:flex-start; gap:10px">
-        <div style="flex:1"><div class="pjt-code">${p.code} <span class="badge type">${TYPE_LABEL[p.type]||'일반'}</span></div><div class="pjt-name">${p.name||''}</div></div>
-        <span class="badge ${p.status==='done'?'done':'run'}">${p.status==='done'?'종료':'진행중'}</span>
-      </div>
-      <div style="margin-top:12px; display:flex; gap:8px">
-        <button class="btn gray sm" onclick="editPjt('${p.id}')">정보 수정</button>
-        <button class="btn gray sm" onclick="delPjt('${p.id}')">삭제</button>
-      </div>
-    </div>
+  const ests=estimates.filter(e=>e.pjtId===id); const est=pjtEstSum(id), b=pjtBilled(id), pd=pjtPaid(id), pr=b-pd;
+  $('v-pjt').innerHTML=`<button class="back" onclick="renderPjtList()">← 프로젝트 목록</button>
+    <div class="card"><div style="display:flex; align-items:flex-start; gap:10px"><div style="flex:1">
+      <div class="pjt-code">${p.code} <span class="badge type">${TYPE_LABEL[p.type]||'일반'}</span></div><div class="pjt-name">${p.name||''}</div>
+      ${p.client?`<div class="small muted" style="margin-top:4px">발주처: ${p.client}</div>`:''}</div>
+      <span class="badge ${p.status==='done'?'done':'run'}">${p.status==='done'?'종료':'진행중'}</span></div>
+      <div style="margin-top:12px; display:flex; gap:8px"><button class="btn gray sm" onclick="editPjt('${p.id}')">정보 수정</button><button class="btn gray sm" onclick="delPjt('${p.id}')">삭제</button></div></div>
     <div class="sec-h" style="margin-top:18px"><h2>요약</h2></div>
-    <div class="sumgrid">
-      <div class="sumcell"><div class="l">견적 합계</div><div class="v">${won(est)}</div></div>
+    <div class="sumgrid"><div class="sumcell"><div class="l">견적 합계</div><div class="v">${won(est)}</div></div>
       <div class="sumcell"><div class="l">청구 누계</div><div class="v">${won(b)}</div></div>
       <div class="sumcell"><div class="l">지급 누계</div><div class="v">${won(pd)}</div></div>
-      <div class="sumcell"><div class="l">실현 손익</div><div class="v ${profit>=0?'pos':'neg'}">${profit>=0?'+':''}${won(profit)}</div></div>
-    </div>
+      <div class="sumcell"><div class="l">실현 손익</div><div class="v ${pr>=0?'pos':'neg'}">${pr>=0?'+':''}${won(pr)}</div></div></div>
     <div class="sec-h" style="margin-top:22px"><h2>견적 내역 (${ests.length})</h2><button class="btn line sm" onclick="newEst('${id}')">+ 견적 작성</button></div>
-    ${ests.length? ests.map(e=>`<div class="litem" onclick="openEst('${e.id}')"><div class="d"><div class="ti">${e.title}</div><div class="mt">${e.no} · ${e.date}</div></div><div class="amt">${won(estTotal(e))}</div></div>`).join('') : '<div class="empty">아직 견적이 없습니다.</div>'}`;
+    ${ests.length? ests.map(e=>`<div class="litem" onclick="openEst('${e.id}')"><div class="d"><div class="ti">${e.title}</div><div class="mt">${e.no} · ${e.date}${e.client?.company?' · '+e.client.company:''}</div></div><div class="amt">${won(estTotal(e))}</div></div>`).join('') : '<div class="empty">아직 견적이 없습니다.</div>'}`;
   window.scrollTo(0,0);
 };
 window.renderPjtList=renderPjt;
 window.addPjt=function(){ openPjtForm(null); };
 window.editPjt=function(id){ openPjtForm(projects.find(p=>p.id===id)); };
-function openPjtForm(p){
-  detailId=p?p.id:null;
-  $('v-pjt').innerHTML=`
-    <button class="back" onclick="${p?`pjtDetail('${p.id}')`:'renderPjtList()'}">← 뒤로</button>
-    <div class="card">
-      <div class="sec-h"><h2>${p?'프로젝트 수정':'프로젝트 등록'}</h2></div>
-      <div class="field"><label>PJT 코드</label><input class="inp" id="pf-code" placeholder="예: P4 Ph5 (XXX)" value="${p?.code||''}"></div>
-      <div class="field"><label>설명</label><input class="inp" id="pf-name" placeholder="예: 귀뚜라미범양냉방 · FCU 설치" value="${p?.name||''}"></div>
-      <div class="field"><label>발주처</label><input class="inp" id="pf-client" placeholder="예: 범양냉방" value="${p?.client||''}"></div>
-      <div class="row2">
-        <div class="field"><label>정산 방식</label><select class="sel" id="pf-type">
-          <option value="general" ${p?.type==='general'?'selected':''}>일반 (품목 직접 입력)</option>
-          <option value="fcu" ${p?.type==='fcu'?'selected':''}>FCU 자동정산 (공정·공수 연동)</option>
-        </select></div>
-        <div class="field"><label>상태</label><select class="sel" id="pf-status">
-          <option value="run" ${p?.status!=='done'?'selected':''}>진행중</option>
-          <option value="done" ${p?.status==='done'?'selected':''}>종료</option>
-        </select></div>
-      </div>
-      <div class="small muted" style="margin:-4px 0 12px">정산 방식은 정산 탭에서 열리는 양식을 결정합니다. FCU는 P4 Ph2 전용 자동계산, 일반은 품목식 정산서입니다.</div>
-      <div style="display:flex; gap:8px">
-        <button class="btn line full" onclick="${p?`pjtDetail('${p.id}')`:'renderPjtList()'}">취소</button>
-        <button class="btn pri full" onclick="savePjt('${p?p.id:''}')">저장</button>
-      </div>
-    </div>`;
+function openPjtForm(p){ pjtForm=true; detailId=p?p.id:null;
+  $('v-pjt').innerHTML=`<button class="back" onclick="${p?`pjtDetail('${p.id}')`:'renderPjtList()'}">← 뒤로</button>
+    <div class="card"><div class="sec-h"><h2>${p?'프로젝트 수정':'프로젝트 등록'}</h2></div>
+    <div class="field"><label>PJT 코드</label><input class="inp" id="pf-code" placeholder="예: P4 Ph5 (XXX)" value="${p?.code||''}"></div>
+    <div class="field"><label>설명</label><input class="inp" id="pf-name" placeholder="예: 귀뚜라미범양냉방 · FCU 설치" value="${p?.name||''}"></div>
+    <div class="field"><label>발주처</label><input class="inp" id="pf-client" placeholder="예: 범양냉방" value="${p?.client||''}"></div>
+    <div class="row2"><div class="field"><label>정산 방식</label><select class="sel" id="pf-type">
+      <option value="general" ${p?.type==='general'?'selected':''}>일반 (품목 직접 입력)</option>
+      <option value="fcu" ${p?.type==='fcu'?'selected':''}>FCU 자동정산 (공정·공수 연동)</option></select></div>
+      <div class="field"><label>상태</label><select class="sel" id="pf-status">
+      <option value="run" ${p?.status!=='done'?'selected':''}>진행중</option><option value="done" ${p?.status==='done'?'selected':''}>종료</option></select></div></div>
+    <div style="display:flex; gap:8px"><button class="btn line full" onclick="${p?`pjtDetail('${p.id}')`:'renderPjtList()'}">취소</button><button class="btn pri full" onclick="savePjt('${p?p.id:''}')">저장</button></div></div>`;
   window.scrollTo(0,0);
 }
-window.savePjt=async function(id){
-  const code=$('pf-code').value.trim(); if(!code){ toast('PJT 코드를 입력하세요.'); return; }
+window.savePjt=async function(id){ const code=$('pf-code').value.trim(); if(!code){ toast('PJT 코드를 입력하세요.'); return; }
   const data={ code, name:$('pf-name').value.trim(), client:$('pf-client').value.trim(), type:$('pf-type').value, status:$('pf-status').value };
-  try{
-    if(id){ await setDoc(doc(db,'gihoek_projects',id), data, {merge:true}); toast('수정했습니다.'); pjtDetail(id); }
-    else{ const nid='pjt_'+Date.now(); await setDoc(doc(db,'gihoek_projects',nid), {...data, createdAt:serverTimestamp()}); toast('프로젝트를 등록했습니다.'); renderPjt(); }
-  }catch(e){ toast('저장 실패: '+(e.code||e.message)); }
-};
-window.delPjt=async function(id){
-  if(!confirm('이 프로젝트를 삭제할까요? (견적·정산 데이터는 남습니다)')) return;
-  try{ await deleteDoc(doc(db,'gihoek_projects',id)); toast('삭제했습니다.'); renderPjt(); }catch(e){ toast('삭제 실패: '+(e.code||e.message)); }
-};
+  try{ if(id){ await setDoc(doc(db,'gihoek_projects',id),data,{merge:true}); toast('수정했습니다.'); pjtDetail(id); }
+    else{ const nid='pjt_'+Date.now(); await setDoc(doc(db,'gihoek_projects',nid),{...data, createdAt:serverTimestamp()}); toast('프로젝트를 등록했습니다.'); renderPjt(); } }
+  catch(e){ toast('저장 실패: '+(e.code||e.message)); } };
+window.delPjt=async function(id){ if(!confirm('이 프로젝트를 삭제할까요? (견적·정산 데이터는 남습니다)')) return;
+  try{ await deleteDoc(doc(db,'gihoek_projects',id)); toast('삭제했습니다.'); renderPjt(); }catch(e){ toast('삭제 실패: '+(e.code||e.message)); } };
 
 /* ---------------- 견적 ---------------- */
-let estDraft=null, viewEstId=null;
-function renderEst(){
-  estDraft=null; viewEstId=null;
-  $('v-est').innerHTML=`
-    <div class="sec-h"><h2>견적</h2><button class="btn pri sm" onclick="newEst()">+ 견적 작성</button></div>
-    ${estimates.length? estimates.map(e=>{ const p=projects.find(x=>x.id===e.pjtId);
-      return `<div class="litem" onclick="openEst('${e.id}')"><div class="d"><div class="ti">${e.title}</div><div class="mt"><span class="pill">${p?p.code:'삭제된 PJT'}</span> &nbsp;${e.no} · ${e.date}</div></div><div class="amt">${won(estTotal(e))}</div></div>`;
-    }).join('') : '<div class="empty">작성된 견적이 없습니다.</div>'}`;
+let estDraft=null, viewEstId=null, clientMgr=false;
+function renderEst(){ estDraft=null; viewEstId=null; clientMgr=false;
+  $('v-est').innerHTML=`<div class="sec-h"><h2>견적</h2><div style="display:flex;gap:8px">
+    <button class="btn gray sm" onclick="openClientMgr()">거래처 관리</button>
+    <button class="btn pri sm" onclick="newEst()">+ 견적 작성</button></div></div>
+  ${estimates.length? estimates.map(e=>{ const p=projects.find(x=>x.id===e.pjtId);
+    return `<div class="litem" onclick="openEst('${e.id}')"><div class="d"><div class="ti">${e.title}</div><div class="mt"><span class="pill">${p?p.code:'삭제된 PJT'}</span> &nbsp;${e.no} · ${e.date}${e.client?.company?' · '+e.client.company:''}</div></div><div class="amt">${won(estTotal(e))}</div></div>`;
+  }).join('') : '<div class="empty">작성된 견적이 없습니다.</div>'}`;
 }
+window.renderEst=renderEst;
+
 window.newEst=function(pjtId){
   if(!projects.length){ toast('먼저 프로젝트를 등록하세요.'); tab('pjt'); return; }
   estDraft={ pjtId:pjtId||projects[0].id, title:'', date:new Date().toISOString().slice(0,10),
-    items:[{name:'',spec:'',qty:1,price:0},{name:'',spec:'',qty:1,price:0}] };
-  tabSwitchSilent('est'); drawEstForm();
+    clientId: clients[0]?.id||'', issuerId: issuers.find(i=>i.id==='jhsol')?.id || issuers[0]?.id || '',
+    items:[{name:'',spec:'',qty:1,price:0,amount:0},{name:'',spec:'',qty:1,price:0,amount:0}] };
+  tabSilent('est'); drawEstForm();
 };
-function tabSwitchSilent(t){ curTab=t; document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on', x.dataset.tab===t)); document.querySelectorAll('.view').forEach(v=>v.classList.remove('on')); $('v-'+t).classList.add('on'); }
-function drawEstForm(){
-  const d=estDraft;
-  $('v-est').innerHTML=`
-    <button class="back" onclick="renderEst()">← 견적 목록</button>
-    <div class="card">
-      <div class="row2">
-        <div class="field"><label>프로젝트</label><select class="sel" id="ed-pjt" onchange="estDraft.pjtId=this.value">
-          ${projects.map(p=>`<option value="${p.id}" ${p.id===d.pjtId?'selected':''}>${p.code}</option>`).join('')}</select></div>
-        <div class="field"><label>작성일</label><input class="inp" type="date" value="${d.date}" onchange="estDraft.date=this.value"></div>
-      </div>
-      <div class="field"><label>견적 제목</label><input class="inp" id="ed-title" placeholder="예: FCU 설치 1차 견적" value="${d.title}" oninput="estDraft.title=this.value"></div>
-      <label style="font-size:12px;color:var(--sub);font-weight:600">품목</label>
-      <div class="scroll"><table class="items">
-        <colgroup><col class="c-no"><col><col><col class="c-qty"><col class="c-price"><col class="c-amt"><col class="c-del"></colgroup>
-        <thead><tr><th>#</th><th>품명</th><th>규격</th><th>수량</th><th>단가</th><th>금액</th><th></th></tr></thead>
-        <tbody id="est-rows"></tbody></table></div>
-      <button class="btn gray sm" style="margin-top:10px" onclick="addRow()">+ 품목 추가</button>
-      <div class="totbox" id="est-tot"></div>
-      <div style="display:flex; gap:8px; margin-top:16px">
-        <button class="btn line full" onclick="renderEst()">취소</button>
-        <button class="btn pri full" id="est-save" onclick="saveEst()">저장</button>
-      </div>
-    </div>`;
+function clientOpt(sel){ return `<option value="">— 선택 —</option>`+clients.map(c=>`<option value="${c.id}" ${c.id===sel?'selected':''}>${c.company}${c.ceo?' ('+c.ceo+')':''}</option>`).join(''); }
+function issuerOpt(sel){ return issuers.map(c=>`<option value="${c.id}" ${c.id===sel?'selected':''}>${c.company}${c.ceo?' ('+c.ceo+')':''}</option>`).join(''); }
+
+function drawEstForm(){ const d=estDraft;
+  $('v-est').innerHTML=`<button class="back" onclick="renderEst()">← 견적 목록</button>
+  <div class="card">
+    <div class="row2">
+      <div class="field"><label>프로젝트</label><select class="sel" onchange="setDraft('pjtId',this.value)">${projects.map(p=>`<option value="${p.id}" ${p.id===d.pjtId?'selected':''}>${p.code}</option>`).join('')}</select></div>
+      <div class="field"><label>작성일</label><input class="inp" type="date" value="${d.date}" onchange="setDraft('date',this.value)"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>공급자 (보내는 곳)</label><select class="sel" onchange="setDraft('issuerId',this.value)">${issuerOpt(d.issuerId)}</select></div>
+      <div class="field"><label>공급받는자 (거래처)</label><select class="sel" id="ed-client" onchange="setDraft('clientId',this.value)">${clientOpt(d.clientId)}</select></div>
+    </div>
+    <div class="field" style="margin-top:-4px"><button class="btn gray sm" onclick="openClientMgr('est')">+ 거래처 추가·관리</button></div>
+    <div class="field"><label>견적 제목</label><input class="inp" id="ed-title" placeholder="예: FCU 설치 1차 견적" value="${d.title}" oninput="setDraft('title',this.value)"></div>
+    <label style="font-size:12px;color:var(--sub);font-weight:600">품목</label>
+    <div class="scroll"><table class="items">
+      <colgroup><col class="c-no"><col><col><col class="c-qty"><col class="c-price"><col class="c-amt"><col class="c-del"></colgroup>
+      <thead><tr><th>#</th><th>품명</th><th>규격</th><th>수량</th><th>단가</th><th>금액</th><th></th></tr></thead>
+      <tbody id="est-rows"></tbody></table></div>
+    <button class="btn gray sm" style="margin-top:10px" onclick="addRow()">+ 품목 추가</button>
+    <div class="totbox">
+      <div class="totrow"><span class="muted">공급가액</span><span id="t-supply">0 원</span></div>
+      <div class="totrow"><span class="muted">부가세 (10%)</span><span id="t-vat">0 원</span></div>
+      <div class="totrow big"><span>합계금액 <span class="small muted" style="font-weight:500">(직접 수정 가능)</span></span>
+        <span style="display:flex;align-items:center;gap:6px"><input class="tinp" id="t-total" type="number" inputmode="numeric" onchange="onTotalEdit(this.value)"> 원</span></div>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:16px"><button class="btn line full" onclick="renderEst()">취소</button><button class="btn pri full" id="est-save" onclick="saveEst()">저장</button></div>
+  </div>`;
   drawRows(); window.scrollTo(0,0);
 }
+window.setDraft=function(k,v){ if(estDraft) estDraft[k]=v; };
+window.setItem=function(i,k,v){ if(estDraft&&estDraft.items[i]) estDraft.items[i][k]=v; };
 function drawRows(){
   $('est-rows').innerHTML=estDraft.items.map((it,i)=>`<tr>
     <td class="muted small">${i+1}</td>
-    <td><input class="ti" value="${it.name}" placeholder="품명" oninput="upd(${i},'name',this.value)"></td>
-    <td><input class="ti" value="${it.spec}" placeholder="규격" oninput="upd(${i},'spec',this.value)"></td>
-    <td><input class="ti num" type="number" value="${it.qty}" oninput="upd(${i},'qty',this.value)"></td>
-    <td><input class="ti num" type="number" value="${it.price}" oninput="upd(${i},'price',this.value)"></td>
-    <td class="amt">${won((it.qty||0)*(it.price||0))}</td>
+    <td><input class="ti" value="${(it.name||'').replace(/"/g,'&quot;')}" placeholder="품명" oninput="setItem(${i},'name',this.value)"></td>
+    <td><input class="ti" value="${(it.spec||'').replace(/"/g,'&quot;')}" placeholder="규격" oninput="setItem(${i},'spec',this.value)"></td>
+    <td><input class="ti num" id="q-${i}" type="number" inputmode="numeric" value="${it.qty}" oninput="onQty(${i},this.value)"></td>
+    <td><input class="ti num" id="p-${i}" type="number" inputmode="numeric" value="${it.price}" oninput="onPrice(${i},this.value)"></td>
+    <td><input class="ti num" id="a-${i}" type="number" inputmode="numeric" value="${Math.round(itemAmt(it))}" oninput="onAmt(${i},this.value)"></td>
     <td><button class="del" onclick="delRow(${i})">×</button></td></tr>`).join('');
-  drawTot();
+  recalcTotals();
 }
-function drawTot(){
-  const sup=estDraft.items.reduce((s,i)=>s+(i.qty||0)*(i.price||0),0); const vat=Math.round(sup*0.1);
-  $('est-tot').innerHTML=`<div class="totrow"><span class="muted">공급가액</span><span>${won(sup)} 원</span></div>
-    <div class="totrow"><span class="muted">부가세 (10%)</span><span>${won(vat)} 원</span></div>
-    <div class="totrow big"><span>합계금액</span><span>${won(sup+vat)} 원</span></div>`;
+function recalcTotals(){
+  const sup=estDraft.items.reduce((s,it)=>s+itemAmt(it),0); const vat=Math.round(sup*0.1);
+  if($('t-supply')) $('t-supply').textContent=won(sup)+' 원';
+  if($('t-vat')) $('t-vat').textContent=won(vat)+' 원';
+  if($('t-total')) $('t-total').value=Math.round(sup+vat);
 }
-window.upd=function(i,k,val){ estDraft.items[i][k]=(k==='qty'||k==='price')?(parseFloat(val)||0):val; (k==='qty'||k==='price')?drawRows():drawTot(); };
-window.addRow=function(){ estDraft.items.push({name:'',spec:'',qty:1,price:0}); drawRows(); };
-window.delRow=function(i){ estDraft.items.splice(i,1); if(!estDraft.items.length) estDraft.items.push({name:'',spec:'',qty:1,price:0}); drawRows(); };
-window.saveEst=async function(){
-  const d=estDraft; if(!d.title.trim()){ toast('견적 제목을 입력하세요.'); return; }
-  const items=d.items.filter(i=>i.name.trim()); if(!items.length){ toast('품목을 1개 이상 입력하세요.'); return; }
-  const yr=d.date.slice(0,4);
-  const cnt=estimates.filter(e=>(e.no||'').startsWith('EST-'+yr)).length+1;
-  const no='EST-'+yr+'-'+String(cnt).padStart(3,'0');
-  const id='est_'+Date.now();
+window.onQty=function(i,v){ const it=estDraft.items[i]; it.qty=num(v); it.amount=Math.round(it.qty*it.price); const a=$('a-'+i); if(a)a.value=it.amount; recalcTotals(); };
+window.onPrice=function(i,v){ const it=estDraft.items[i]; it.price=num(v); it.amount=Math.round(it.qty*it.price); const a=$('a-'+i); if(a)a.value=it.amount; recalcTotals(); };
+window.onAmt=function(i,v){ const it=estDraft.items[i]; it.amount=num(v); it.price=it.qty>0?Math.round(it.amount/it.qty):it.amount; const p=$('p-'+i); if(p)p.value=it.price; recalcTotals(); };
+window.onTotalEdit=function(v){ const X=num(v); const items=estDraft.items; if(!items.length) return;
+  const targetSupply=Math.round(X/1.1);
+  const others=items.slice(0,-1).reduce((s,it)=>s+itemAmt(it),0);
+  const last=items[items.length-1];
+  last.amount=targetSupply-others; last.price=last.qty>0?Math.round(last.amount/last.qty):last.amount;
+  const li=items.length-1; if($('a-'+li))$('a-'+li).value=Math.round(last.amount); if($('p-'+li))$('p-'+li).value=last.price;
+  recalcTotals(); toast('마지막 품목으로 차액을 반영했습니다.'); };
+window.addRow=function(){ estDraft.items.push({name:'',spec:'',qty:1,price:0,amount:0}); drawRows(); };
+window.delRow=function(i){ estDraft.items.splice(i,1); if(!estDraft.items.length) estDraft.items.push({name:'',spec:'',qty:1,price:0,amount:0}); drawRows(); };
+
+window.saveEst=async function(){ const d=estDraft;
+  if(!d.title.trim()){ toast('견적 제목을 입력하세요.'); return; }
+  const items=d.items.filter(i=>(i.name||'').trim()).map(i=>({name:i.name.trim(),spec:i.spec||'',qty:i.qty||0,price:i.price||0,amount:Math.round(itemAmt(i))}));
+  if(!items.length){ toast('품목을 1개 이상 입력하세요.'); return; }
+  const yr=d.date.slice(0,4); const cnt=estimates.filter(e=>(e.no||'').startsWith('EST-'+yr)).length+1;
+  const no='EST-'+yr+'-'+String(cnt).padStart(3,'0'); const id='est_'+Date.now();
+  const cl=clients.find(c=>c.id===d.clientId)||null; const iss=issuers.find(c=>c.id===d.issuerId)||null;
   $('est-save').disabled=true;
-  try{ await setDoc(doc(db,'gihoek_estimates',id), {pjtId:d.pjtId, no, date:d.date, title:d.title.trim(), items, createdAt:serverTimestamp()}); toast('견적을 저장했습니다.'); renderEst(); }
-  catch(e){ $('est-save').disabled=false; toast('저장 실패: '+(e.code||e.message)); }
-};
-window.openEst=function(id){
-  viewEstId=id; const e=estimates.find(x=>x.id===id); if(!e){ renderEst(); return; }
-  const p=projects.find(x=>x.id===e.pjtId); const sup=estTotal(e), vat=Math.round(sup*0.1);
-  tabSwitchSilent('est');
-  $('v-est').innerHTML=`
-    <button class="back" onclick="renderEst()">← 견적 목록</button>
+  try{ await setDoc(doc(db,'gihoek_estimates',id),{ pjtId:d.pjtId, no, date:d.date, title:d.title.trim(), items,
+      clientId:d.clientId||'', client: cl?{company:cl.company,ceo:cl.ceo||'',bizno:cl.bizno||'',tel:cl.tel||'',email:cl.email||'',address:cl.address||''}:null,
+      issuerId:d.issuerId||'', issuer: iss?{company:iss.company,ceo:iss.ceo||'',bizno:iss.bizno||'',tel:iss.tel||'',email:iss.email||'',address:iss.address||''}:null,
+      createdAt:serverTimestamp() });
+    toast('견적을 저장했습니다.'); renderEst(); }
+  catch(e){ $('est-save').disabled=false; toast('저장 실패: '+(e.code||e.message)); } };
+
+window.openEst=function(id){ viewEstId=id; const e=estimates.find(x=>x.id===id); if(!e){ renderEst(); return; }
+  const p=projects.find(x=>x.id===e.pjtId); const sup=estSupply(e), vat=Math.round(sup*0.1);
+  tabSilent('est');
+  const partyHtml=(label,o)=> `<div class="party"><div class="pl">${label}</div><div class="pc">${o?.company||'-'}</div>
+    <div class="pd">${o?.ceo?'대표 '+o.ceo:''}${o?.bizno?' · '+o.bizno:''}</div>${o?.tel?`<div class="pd">${o.tel}</div>`:''}${o?.address?`<div class="pd">${o.address}</div>`:''}</div>`;
+  $('v-est').innerHTML=`<button class="back" onclick="renderEst()">← 견적 목록</button>
     <div class="card">
       <div style="display:flex; justify-content:space-between; align-items:flex-start">
         <div><div style="font-size:16px;font-weight:800">${e.title}</div><div class="small muted" style="margin-top:3px"><span class="pill">${p?p.code:'-'}</span> &nbsp;${e.no} · ${e.date}</div></div>
-        <button class="btn gray sm" onclick="delEst('${e.id}')">삭제</button>
+        <div style="display:flex;gap:6px"><button class="btn line sm" onclick="printEst('${e.id}')">🖨 인쇄/PDF</button><button class="btn gray sm" onclick="delEst('${e.id}')">삭제</button></div>
       </div>
-      <div class="scroll" style="margin-top:14px"><table class="items">
+      <div class="partybox">${partyHtml('공급자 (보내는 곳)',e.issuer)}${partyHtml('공급받는자 (거래처)',e.client)}</div>
+      <div class="scroll"><table class="items">
         <thead><tr><th>#</th><th>품명</th><th>규격</th><th class="right">수량</th><th class="right">단가</th><th class="right">금액</th></tr></thead>
-        <tbody>${e.items.map((it,i)=>`<tr><td class="muted small">${i+1}</td><td>${it.name}</td><td class="muted">${it.spec||'-'}</td><td class="right">${won(it.qty)}</td><td class="right">${won(it.price)}</td><td class="amt">${won(it.qty*it.price)}</td></tr>`).join('')}</tbody>
+        <tbody>${e.items.map((it,i)=>`<tr><td class="muted small">${i+1}</td><td>${it.name}</td><td class="muted">${it.spec||'-'}</td><td class="right">${won(it.qty)}</td><td class="right">${won(it.price)}</td><td class="right" style="font-weight:700;color:var(--money)">${won(itemAmt(it))}</td></tr>`).join('')}</tbody>
       </table></div>
-      <div class="totbox">
-        <div class="totrow"><span class="muted">공급가액</span><span>${won(sup)} 원</span></div>
+      <div class="totbox"><div class="totrow"><span class="muted">공급가액</span><span>${won(sup)} 원</span></div>
         <div class="totrow"><span class="muted">부가세 (10%)</span><span>${won(vat)} 원</span></div>
-        <div class="totrow big"><span>합계금액</span><span>${won(sup+vat)} 원</span></div>
-      </div>
+        <div class="totrow big"><span>합계금액</span><span>${won(sup+vat)} 원</span></div></div>
     </div>`;
   window.scrollTo(0,0);
 };
 window.delEst=async function(id){ if(!confirm('이 견적을 삭제할까요?')) return; try{ await deleteDoc(doc(db,'gihoek_estimates',id)); toast('삭제했습니다.'); renderEst(); }catch(e){ toast('삭제 실패: '+(e.code||e.message)); } };
 
+window.printEst=function(id){ const e=estimates.find(x=>x.id===id); if(!e) return; const p=projects.find(x=>x.id===e.pjtId);
+  const sup=estSupply(e), vat=Math.round(sup*0.1), tot=sup+vat;
+  const iss=e.issuer||{}, cl=e.client||{};
+  const rows=e.items.map((it,i)=>`<tr><td style="text-align:center">${i+1}</td><td>${it.name||''}</td><td>${it.spec||''}</td><td style="text-align:right">${won(it.qty)}</td><td style="text-align:right">${won(it.price)}</td><td style="text-align:right">${won(itemAmt(it))}</td></tr>`).join('');
+  const w=window.open('','_blank'); if(!w){ toast('팝업이 차단되었습니다.'); return; }
+  w.document.write(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>견적서 ${e.no}</title>
+  <style>@page{size:A4;margin:16mm}*{box-sizing:border-box;font-family:'Malgun Gothic','맑은 고딕',sans-serif}
+  body{margin:0;color:#1a2330;font-size:12px}
+  h1{text-align:center;font-size:26px;letter-spacing:14px;margin:0 0 18px;font-weight:800}
+  .meta{display:flex;justify-content:space-between;font-size:11px;color:#555;margin-bottom:10px}
+  .parties{display:flex;gap:10px;margin-bottom:14px}
+  .pcard{flex:1;border:1px solid #cfd8e6;border-radius:6px;padding:10px 12px}
+  .pcard .h{font-size:10px;color:#1D5BA6;font-weight:700;margin-bottom:6px;letter-spacing:1px}
+  .pcard .nm{font-size:14px;font-weight:800}
+  .pcard .ln{font-size:11px;color:#444;margin-top:2px}
+  table{width:100%;border-collapse:collapse;margin-top:6px}
+  th,td{border:1px solid #cfd8e6;padding:7px 8px;font-size:11.5px}
+  th{background:#eaf2fc;color:#1D5BA6;font-weight:700}
+  tfoot td{font-weight:700;background:#f6f9fd}
+  .tot{font-size:14px}
+  .stamp{margin-top:24px;text-align:right;font-size:12px;color:#333}
+  .title-row{font-size:13px;font-weight:700;margin:6px 0 12px;text-align:center;color:#1D5BA6}
+  </style></head><body>
+  <h1>견 적 서</h1>
+  <div class="meta"><span>견적번호: ${e.no}</span><span>작성일: ${e.date}</span></div>
+  <div class="parties">
+    <div class="pcard"><div class="h">공급받는자</div><div class="nm">${cl.company||'-'}</div>
+      <div class="ln">${cl.ceo?'대표 '+cl.ceo:''}${cl.bizno?' / '+cl.bizno:''}</div>${cl.tel?`<div class="ln">${cl.tel}</div>`:''}${cl.address?`<div class="ln">${cl.address}</div>`:''}</div>
+    <div class="pcard"><div class="h">공급자</div><div class="nm">${iss.company||'-'}</div>
+      <div class="ln">${iss.ceo?'대표 '+iss.ceo:''}${iss.bizno?' / '+iss.bizno:''}</div>${iss.tel?`<div class="ln">${iss.tel}</div>`:''}${iss.email?`<div class="ln">${iss.email}</div>`:''}</div>
+  </div>
+  <div class="title-row">${p?'['+p.code+'] ':''}${e.title}</div>
+  <table><thead><tr><th style="width:34px">No</th><th>품명</th><th>규격</th><th style="width:60px">수량</th><th style="width:96px">단가</th><th style="width:110px">금액</th></tr></thead>
+  <tbody>${rows}</tbody>
+  <tfoot>
+    <tr><td colspan="5" style="text-align:right">공급가액</td><td style="text-align:right">${won(sup)}</td></tr>
+    <tr><td colspan="5" style="text-align:right">부가세 (10%)</td><td style="text-align:right">${won(vat)}</td></tr>
+    <tr class="tot"><td colspan="5" style="text-align:right">합계금액</td><td style="text-align:right">${won(tot)}</td></tr>
+  </tfoot></table>
+  <div class="stamp">위와 같이 견적합니다.<br><br>${iss.company||''} ${iss.ceo?'　대표 '+iss.ceo+' (인)':''}</div>
+  <scr`+`ipt>window.onload=function(){setTimeout(function(){window.print();},250);}</scr`+`ipt>
+  </body></html>`);
+  w.document.close();
+};
+
+/* ---------- 거래처 관리 ---------- */
+window.openClientMgr=function(){ clientMgr=true; tabSilent('est'); drawClientMgr(); };
+function drawClientMgr(){
+  $('v-est').innerHTML=`<button class="back" onclick="renderEst()">← 견적</button>
+    <div class="sec-h"><h2>거래처 관리</h2><button class="btn pri sm" onclick="editClient()">+ 거래처 추가</button></div>
+    ${clients.length? clients.map(c=>`<div class="litem" onclick="editClient('${c.id}')"><div class="d"><div class="ti">${c.company}</div><div class="mt">${c.ceo?'대표 '+c.ceo:''}${c.tel?' · '+c.tel:''}</div></div><div class="small muted">수정 ›</div></div>`).join('') : '<div class="empty">등록된 거래처가 없습니다.</div>'}`;
+  window.scrollTo(0,0);
+}
+window.editClient=function(id){ const c=id?clients.find(x=>x.id===id):null;
+  $('v-est').innerHTML=`<button class="back" onclick="openClientMgr()">← 거래처 목록</button>
+    <div class="card"><div class="sec-h"><h2>${c?'거래처 수정':'거래처 추가'}</h2></div>
+    <div class="field"><label>회사명</label><input class="inp" id="cf-company" value="${(c?.company||'').replace(/"/g,'&quot;')}"></div>
+    <div class="row2"><div class="field"><label>대표자</label><input class="inp" id="cf-ceo" value="${(c?.ceo||'').replace(/"/g,'&quot;')}"></div>
+      <div class="field"><label>사업자번호</label><input class="inp" id="cf-bizno" value="${c?.bizno||''}"></div></div>
+    <div class="row2"><div class="field"><label>연락처</label><input class="inp" id="cf-tel" value="${c?.tel||''}"></div>
+      <div class="field"><label>이메일</label><input class="inp" id="cf-email" value="${c?.email||''}"></div></div>
+    <div class="field"><label>주소</label><input class="inp" id="cf-address" value="${(c?.address||'').replace(/"/g,'&quot;')}"></div>
+    <div style="display:flex;gap:8px">${c?`<button class="btn gray sm" onclick="delClient('${c.id}')">삭제</button>`:''}
+      <button class="btn line full" onclick="openClientMgr()">취소</button><button class="btn pri full" onclick="saveClient('${c?c.id:''}')">저장</button></div></div>`;
+  window.scrollTo(0,0);
+};
+window.saveClient=async function(id){ const company=$('cf-company').value.trim(); if(!company){ toast('회사명을 입력하세요.'); return; }
+  const data={ company, ceo:$('cf-ceo').value.trim(), bizno:$('cf-bizno').value.trim(), tel:$('cf-tel').value.trim(), email:$('cf-email').value.trim(), address:$('cf-address').value.trim() };
+  try{ const cid=id||('cl_'+Date.now()); await setDoc(doc(db,'gihoek_clients',cid),data,{merge:true}); toast('저장했습니다.'); openClientMgr(); }
+  catch(e){ toast('저장 실패: '+(e.code||e.message)); } };
+window.delClient=async function(id){ if(!confirm('이 거래처를 삭제할까요?')) return; try{ await deleteDoc(doc(db,'gihoek_clients',id)); toast('삭제했습니다.'); openClientMgr(); }catch(e){ toast('삭제 실패: '+(e.code||e.message)); } };
+
 /* ---------------- 정산 / 회계 (다음 단계) ---------------- */
 function renderSettle(){ $('v-settle').innerHTML=`<div class="soon"><div class="big">🧾</div><div style="font-weight:700;color:var(--ink)">정산 — 준비 중</div><div class="small" style="margin-top:6px">대금청구서·지급예정서를 PJT별로 작성·조회합니다.<br>다음 단계에서 추가됩니다.</div></div>`; }
-function renderAcct(){ $('v-acct').innerHTML=`<div class="soon"><div class="big">📒</div><div style="font-weight:700;color:var(--ink)">회계 — 준비 중</div><div class="small" style="margin-top:6px">개별 손익 · 종합 현황 · 회계장부를 제공합니다.<br>정산 다음 단계에서 추가됩니다.</div></div>`; }
+function renderAcct(){ $('v-acct').innerHTML=`<div class="soon"><div class="big">📒</div><div style="font-weight:700;color:var(--ink)">회계 — 준비 중</div><div class="small" style="margin-top:6px">개별 손익 · 종합 현황 · 회계장부를 제공합니다.</div></div>`; }
 
-window.tab=tab; window.renderEst=renderEst;
+window.tab=tab;
 </script>
 </body>
 </html>
