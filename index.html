@@ -104,6 +104,14 @@
   #pv .setdoc th{background:#eaf2fc; color:#1D5BA6}
   #pv .setdoc tfoot td{font-weight:700; background:#f6f9fd}
   #pv .setdoc .stamp{margin-top:20px; text-align:right; font-size:12px}
+  .monthbar{display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:14px}
+  .monthbar button{border:1px solid var(--line); background:#fff; border-radius:8px; width:34px; height:34px; font-size:16px; cursor:pointer; color:var(--blue)}
+  .monthbar .m{font-size:15px; font-weight:800}
+  .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px}
+  .catpill{display:inline-block; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:9px; white-space:nowrap}
+  .emodal{position:fixed; inset:0; background:rgba(15,25,40,.5); z-index:85; display:none; align-items:flex-end; justify-content:center}
+  .emodal.on{display:flex}
+  .esheet{background:#fff; width:100%; max-width:900px; border-radius:16px 16px 0 0; padding:18px 18px 26px; max-height:90vh; overflow:auto}
   .partybox{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0}
   @media(max-width:560px){ .partybox{grid-template-columns:1fr} }
   .party{border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:#fafbfd}
@@ -160,6 +168,8 @@
   </div>
 </div>
 
+<div class="emodal" id="emodal"><div class="esheet" id="em-body"></div></div>
+
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
@@ -182,7 +192,7 @@ const estTotal =e=>{ const s=estSupply(e); return s+Math.round(s*0.1); };
 function toast(t){ const e=$('toast'); e.textContent=t; e.classList.add('show'); clearTimeout(e._t); e._t=setTimeout(()=>e.classList.remove('show'),2300); }
 
 let me=null;
-let projects=[], estimates=[], settlements=[], companies=[];
+let projects=[], estimates=[], settlements=[], companies=[], expenses=[];
 const supplierList=()=>companies.filter(c=>c.roleSupplier);
 const clientList=()=>companies.filter(c=>c.roleClient);
 const compById=id=>companies.find(c=>c.id===id)||null;
@@ -229,6 +239,7 @@ async function startApp(){
   onSnapshot(collection(db,'gihoek_estimates'), s=>{ estimates=[]; s.forEach(d=>estimates.push({id:d.id,...d.data()})); estimates.sort((a,b)=>{ const dc=(b.date||'').localeCompare(a.date||''); if(dc) return dc; return (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0); }); if(curTab==='pjt'&&detailId) pjtDetail(detailId); else if(curTab==='pjt'&&!pjtForm) renderPjt(); if(curTab==='est'&&!estDraft&&!viewEstId) renderEst(); });
   onSnapshot(collection(db,'gihoek_settlements'), s=>{ settlements=[]; s.forEach(d=>settlements.push({id:d.id,...d.data()})); if(curTab==='pjt') { detailId?pjtDetail(detailId):renderPjt(); } else if(curTab==='settle'&&!settleDraft&&!viewSetId) renderSettle(); else if(curTab==='acct') renderAcct(); });
   onSnapshot(collection(db,'gihoek_companies'), s=>{ companies=[]; s.forEach(d=>companies.push({id:d.id,...d.data()})); companies.sort((a,b)=>(a.company||'').localeCompare(b.company||'')); if(curTab==='comp'&&!compForm) renderComp(); });
+  onSnapshot(collection(db,'gihoek_expenses'), s=>{ expenses=[]; s.forEach(d=>expenses.push({id:d.id,...d.data()})); if(curTab==='acct') renderAcct(); });
   renderPjt();
 }
 
@@ -872,36 +883,108 @@ window.pvPrint=function(){ const s=settlements.find(x=>x.id===$('pv').dataset.si
   w.document.write(`<!doctype html><meta charset="utf-8"><title>${s.docType==='invoice'?'대금청구서':'지급예정서'} ${s.no}</title><style>@page{size:A4;margin:16mm}${SET_DOC_CSS}</style>${settleDocHTML(s)}<scr`+`ipt>window.onload=function(){setTimeout(function(){window.print();},250);}</scr`+`ipt>`);
   w.document.close(); };
 
+/* ---------------- 회계 ---------------- */
+const ACC_CATS=[
+  {k:'식대', bg:'#fff3e0', fg:'#a85b00'},{k:'유류비', bg:'#e8f0fb', fg:'#0a3d7a'},
+  {k:'공구·자재비', bg:'#e0f2f1', fg:'#00695c'},{k:'차량유지비', bg:'#ede7f6', fg:'#4527a0'},
+  {k:'사무용품', bg:'#e8f5e9', fg:'#1b5e20'},{k:'기타', bg:'#eceff1', fg:'#37474f'},
+  {k:'임대료', bg:'#f5f0e8', fg:'#6d4c00'},{k:'세금', bg:'#ffeaea', fg:'#7f1d1d'},
+  {k:'급여', bg:'#eceff1', fg:'#263238'},{k:'용역비', bg:'#e0f7fa', fg:'#006064'},
+];
+const ACC_PAYS=['법인카드','개인카드','현금','계좌이체'];
+const DIRECT_CATS=['급여','용역비','공구·자재비'];
+const accIsDirect=c=>DIRECT_CATS.includes(c);
+const accCatStyle=k=>{ const c=ACC_CATS.find(c=>c.k===k)||ACC_CATS[5]; return `background:${c.bg};color:${c.fg}`; };
+let curAccMonth=new Date().toISOString().slice(0,7), accSub='pnl';
+const accMonthExp=()=>expenses.filter(e=>(e.date||'').slice(0,7)===curAccMonth).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+const monthBill=(pid,month)=>settlements.filter(s=>s.pjtId===pid&&s.docType==='invoice'&&s.status!=='void'&&s.baseMonth===month).reduce((a,s)=>a+(s.amount||0),0);
+
 function renderAcct(){
-  const rows=projects.map(p=>{ const est=pjtEstSum(p.id), bill=pjtBilled(p.id), paid=pjtPaid(p.id); return {p, est, bill, paid, profit:bill-paid, unbilled:Math.max(0,est-bill), rate: est>0?Math.round(bill/est*100):0}; });
-  const tEst=rows.reduce((a,r)=>a+r.est,0), tBill=rows.reduce((a,r)=>a+r.bill,0), tPaid=rows.reduce((a,r)=>a+r.paid,0);
-  const tProfit=tBill-tPaid, tUnbilled=Math.max(0,tEst-tBill), tRate=tEst>0?Math.round(tBill/tEst*100):0;
-  $('v-acct').innerHTML=`<div class="sec-h"><h2>회계 · 종합 현황</h2></div>
-    <div class="sumgrid"><div class="sumcell"><div class="l">총 견적</div><div class="v">${won(tEst)}</div></div>
-      <div class="sumcell"><div class="l">총 청구 (매출)</div><div class="v">${won(tBill)}</div></div>
-      <div class="sumcell"><div class="l">총 지급</div><div class="v">${won(tPaid)}</div></div>
-      <div class="sumcell"><div class="l">총 손익</div><div class="v ${tProfit>=0?'pos':'neg'}">${tProfit>=0?'+':''}${won(tProfit)}</div></div></div>
-    <div class="row2" style="margin-top:10px">
-      <div class="card" style="padding:12px 14px"><div class="small muted">미청구 잔액 (견적−청구)</div><div style="font-size:16px;font-weight:800;color:var(--money);margin-top:2px">${won(tUnbilled)} 원</div></div>
-      <div class="card" style="padding:12px 14px"><div class="small muted">청구율 (청구/견적)</div><div style="font-size:16px;font-weight:800;color:var(--blue);margin-top:2px">${tRate}%</div></div></div>
-    <div class="small muted" style="margin:8px 2px 0">손익 = 청구(원청 매출) − 지급(하청). 비용은 회계장부 반영 시 순이익으로 확장됩니다. · 폐기 건 제외, 공급가 기준.</div>
-
-    <div class="sec-h" style="margin-top:22px"><h2>개별 손익</h2></div>
-    ${rows.length? rows.map(r=>`<div class="pjt" style="cursor:default">
-      <div class="pjt-top"><div style="flex:1"><div class="pjt-code">${r.p.code} <span class="badge type">${TYPE_LABEL[r.p.type]||'일반'}</span></div><div class="pjt-name">${r.p.name||''}</div></div>
-        <span class="badge ${r.p.status==='done'?'done':'run'}">${r.p.status==='done'?'종료':'진행중'}</span></div>
-      <div class="sumgrid"><div class="sumcell"><div class="l">견적</div><div class="v">${won(r.est)}</div></div>
-        <div class="sumcell"><div class="l">청구</div><div class="v">${won(r.bill)}</div></div>
-        <div class="sumcell"><div class="l">지급</div><div class="v">${won(r.paid)}</div></div>
-        <div class="sumcell"><div class="l">손익</div><div class="v ${r.profit>=0?'pos':'neg'}">${r.profit>=0?'+':''}${won(r.profit)}</div></div></div>
-      <div style="margin-top:9px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-bottom:3px"><span>청구율 ${r.rate}%</span><span>미청구 ${won(r.unbilled)}</span></div>
-        <div style="height:7px;background:#eef2f7;border-radius:5px;overflow:hidden"><div style="height:100%;width:${Math.min(100,r.rate)}%;background:var(--blue)"></div></div></div>
-    </div>`).join('') : '<div class="empty">프로젝트가 없습니다.</div>'}
-
-    <div class="card" style="margin-top:18px;background:#fafbfd;text-align:center;color:var(--sub)">
-      <div style="font-size:22px;margin-bottom:4px">📒</div><div style="font-weight:700;color:var(--ink);font-size:13.5px">회계장부 — 준비 중</div>
-      <div class="small" style="margin-top:4px">식대·유류비·공구자재비 등 비용을 VAT 분리해 기록하면, 위 손익이 비용까지 반영한 순이익으로 확장됩니다.</div></div>`;
+  $('v-acct').innerHTML=`<div class="sec-h"><h2>회계</h2></div>
+    <div class="monthbar"><button onclick="accShiftMonth(-1)">‹</button><span class="m">${curAccMonth.replace('-','년 ')}월</span><button onclick="accShiftMonth(1)">›</button></div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="seg-btn ${accSub==='pnl'?'on':''}" onclick="accTab('pnl')">영업이익 현황</button>
+      <button class="seg-btn ${accSub==='ledger'?'on':''}" onclick="accTab('ledger')">비용 장부</button></div>
+    <div id="acc-body"></div>`;
+  accSub==='ledger'?renderAccLedger():renderAccPnl();
 }
+window.renderAcct=renderAcct;
+window.accTab=function(t){ accSub=t; renderAcct(); };
+window.accShiftMonth=function(d){ const [y,m]=curAccMonth.split('-').map(Number); const nm=new Date(y,m-1+d,1); curAccMonth=nm.getFullYear()+'-'+String(nm.getMonth()+1).padStart(2,'0'); renderAcct(); };
+
+function renderAccPnl(){
+  const list=accMonthExp();
+  const byPjt={}; projects.forEach(p=>byPjt[p.id]={dir:0,ind:0}); let comDir=0,comInd=0;
+  list.forEach(e=>{ const t=byPjt[e.pjt]; if(e.pjt&&t){ accIsDirect(e.cat)?t.dir+=e.total:t.ind+=e.total; } else { accIsDirect(e.cat)?comDir+=e.total:comInd+=e.total; } });
+  const totBill=projects.reduce((a,p)=>a+monthBill(p.id,curAccMonth),0);
+  const totDir=list.filter(e=>accIsDirect(e.cat)).reduce((a,e)=>a+e.total,0);
+  const totInd=list.filter(e=>!accIsDirect(e.cat)).reduce((a,e)=>a+e.total,0);
+  const op=totBill-totDir-totInd; const opRate=totBill>0?Math.round(op/totBill*1000)/10:0;
+  $('acc-body').innerHTML=`
+    <div class="sumgrid">
+      <div class="sumcell"><div class="l">매출 (청구)</div><div class="v">${won(totBill)}</div></div>
+      <div class="sumcell"><div class="l">직접비</div><div class="v neg">${won(totDir)}</div></div>
+      <div class="sumcell"><div class="l">간접비</div><div class="v neg">${won(totInd)}</div></div>
+      <div class="sumcell"><div class="l">영업이익 <span style="color:var(--blue)">(${opRate}%)</span></div><div class="v ${op>=0?'pos':'neg'}">${op>=0?'+':''}${won(op)}</div></div></div>
+    <div class="small muted" style="margin:8px 2px 0">영업이익 = 매출(기준월 청구) − 직접비 − 간접비. 직접비=급여·용역비·공구자재비 / 간접비=임대료·식대·세금·차량유지비·유류비·사무용품·기타. 정산 지급은 손익에 미반영.</div>
+    <div class="sec-h" style="margin-top:20px"><h2>PJT별 영업이익</h2></div>
+    <div class="card" style="padding:12px"><div class="scroll"><table class="ptab">
+      <thead><tr><th class="l">PJT</th><th>매출</th><th>직접비</th><th>간접비</th><th>영업이익</th><th>이익률</th></tr></thead>
+      <tbody>${projects.length?projects.map(p=>{ const b=monthBill(p.id,curAccMonth),di=byPjt[p.id].dir,ind=byPjt[p.id].ind,o=b-di-ind,r=b>0?Math.round(o/b*1000)/10:0;
+        return `<tr><td class="l">${p.code}</td><td>${won(b)}</td><td class="neg" style="color:var(--warn)">${won(di)}</td><td style="color:var(--warn)">${won(ind)}</td><td style="font-weight:700;color:${o>=0?'var(--ok)':'var(--warn)'}">${o>=0?'+':''}${won(o)}</td><td>${b>0?r+'%':'-'}</td></tr>`; }).join(''):'<tr><td colspan="6" class="center muted" style="padding:16px">프로젝트 없음</td></tr>'}
+      ${(comDir+comInd)>0?`<tr style="background:#f6f9fd"><td class="l">공통비용 (미지정)</td><td>-</td><td style="color:var(--warn)">${won(comDir)}</td><td style="color:var(--warn)">${won(comInd)}</td><td>-</td><td>-</td></tr>`:''}</tbody></table></div>
+      <div class="small muted" style="margin-top:8px">공통비용(PJT 미지정)은 전체 영업이익엔 반영, 개별 PJT엔 배분 안 함. · 폐기 건 제외, 공급가 기준.</div></div>`;
+}
+
+function renderAccLedger(){
+  const list=accMonthExp();
+  const tot=list.reduce((a,e)=>a+e.total,0), sup=list.reduce((a,e)=>a+e.supply,0), vat=list.reduce((a,e)=>a+e.vat,0);
+  const byCat={}; ACC_CATS.forEach(c=>byCat[c.k]={cnt:0,sup:0,vat:0,total:0});
+  list.forEach(e=>{ const b=byCat[e.cat]||byCat['기타']; b.cnt++; b.sup+=e.supply; b.vat+=e.vat; b.total+=e.total; });
+  $('acc-body').innerHTML=`
+    <div class="sumgrid">
+      <div class="sumcell"><div class="l">총 지출</div><div class="v">${won(tot)}</div></div>
+      <div class="sumcell"><div class="l">건수</div><div class="v">${list.length}</div></div>
+      <div class="sumcell"><div class="l">공급가 합</div><div class="v">${won(sup)}</div></div>
+      <div class="sumcell"><div class="l">부가세 합</div><div class="v">${won(vat)}</div></div></div>
+    <div class="card" style="margin-top:14px;padding:12px"><div class="sec-h"><h2>카테고리별 집계</h2><button class="btn pri sm" onclick="accOpenForm()">+ 비용 입력</button></div>
+      <div class="scroll"><table class="ptab"><thead><tr><th class="l">카테고리</th><th>구분</th><th>건수</th><th>공급가</th><th>부가세</th><th>합계</th></tr></thead>
+        <tbody>${ACC_CATS.filter(c=>byCat[c.k].cnt>0).map(c=>{ const b=byCat[c.k]; return `<tr><td class="l"><span class="catpill" style="${accCatStyle(c.k)}">${c.k}</span></td><td class="small ${accIsDirect(c.k)?'':'muted'}">${accIsDirect(c.k)?'직접비':'간접비'}</td><td>${b.cnt}</td><td>${won(b.sup)}</td><td>${won(b.vat)}</td><td style="font-weight:700;color:var(--money)">${won(b.total)}</td></tr>`; }).join('')||'<tr><td colspan="6" class="center muted" style="padding:16px">이 달 비용이 없습니다.</td></tr>'}</tbody>
+        ${list.length?`<tfoot><tr style="background:#f6f9fd;font-weight:700"><td class="l">합계</td><td></td><td>${list.length}</td><td>${won(sup)}</td><td>${won(vat)}</td><td style="color:var(--money)">${won(tot)}</td></tr></tfoot>`:''}</table></div></div>
+    <div class="card" style="padding:12px"><div class="sec-h"><h2>상세 내역</h2></div>
+      ${list.length? list.map(e=>`<div class="litem" style="cursor:pointer" onclick="accOpenForm('${e.id}')">
+        <div class="d" style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700"><span class="catpill" style="${accCatStyle(e.cat)}">${e.cat}</span> &nbsp;${e.vendor||'-'}</div>
+          <div class="small muted" style="margin-top:2px">${e.date} · ${e.pay}${e.pjt?' · '+(projects.find(p=>p.id===e.pjt)?.code||''):' · 공통'}${e.note?' · '+e.note:''}</div></div>
+        <div class="amt" style="font-weight:800;color:var(--money);white-space:nowrap;text-align:right">${won(e.total)}<div class="small muted" style="font-weight:400">VAT ${won(e.vat)}</div></div></div>`).join('')
+        :'<div class="empty">이 달 비용이 없습니다. “비용 입력”으로 추가하세요.</div>'}</div>
+    <div class="note-amber">실제 운영: 영수증·카드내역·계좌 거래내역·주문내역 파일을 춘식이에게 주시면 직접비/간접비로 분류해 이 장부에 채워 넣습니다. 앱에서는 직접 입력·수정·조회를 합니다.</div>`;
+}
+
+window.accOpenForm=function(id){ const e=id?expenses.find(x=>x.id===id):null;
+  $('em-body').innerHTML=`<div class="sec-h"><h2>${e?'비용 수정':'비용 입력'}</h2><button class="btn gray sm" onclick="accCloseForm()">닫기</button></div>
+    <div class="row2"><div class="field"><label>날짜</label><input class="inp" type="date" id="ef-date" value="${e?e.date:curAccMonth+'-01'}"></div>
+      <div class="field"><label>카테고리</label><select class="sel" id="ef-cat">${ACC_CATS.map(c=>`<option ${e&&e.cat===c.k?'selected':''}>${c.k}</option>`).join('')}</select></div></div>
+    <div class="field"><label>상호 (거래처·가맹점)</label><input class="inp" id="ef-vendor" value="${(e?.vendor||'').replace(/"/g,'&quot;')}" placeholder="예: 쿠팡, ○○식당"></div>
+    <div class="row3"><div class="field"><label>합계 (실결제)</label><input class="inp" id="ef-total" inputmode="numeric" value="${e?e.total:''}"></div>
+      <div class="field"><label>공급가</label><input class="inp" id="ef-supply" inputmode="numeric" value="${e?e.supply:''}"></div>
+      <div class="field"><label>부가세</label><input class="inp" id="ef-vat" inputmode="numeric" value="${e?e.vat:''}"></div></div>
+    <div style="display:flex;gap:8px;margin-bottom:11px"><button class="btn line sm" onclick="accSplitVat()">합계 → 공급가·부가세 역산</button><button class="btn gray sm" onclick="accZeroVat()">면세 (부가세 0)</button></div>
+    <div class="row2"><div class="field"><label>결제수단</label><select class="sel" id="ef-pay">${ACC_PAYS.map(p=>`<option ${e&&e.pay===p?'selected':''}>${p}</option>`).join('')}</select></div>
+      <div class="field"><label>PJT 연결 (선택)</label><select class="sel" id="ef-pjt"><option value="">미지정 (공통비용)</option>${projects.map(p=>`<option value="${p.id}" ${e&&e.pjt===p.id?'selected':''}>${p.code}</option>`).join('')}</select></div></div>
+    <div class="field"><label>비고</label><input class="inp" id="ef-note" value="${(e?.note||'').replace(/"/g,'&quot;')}" placeholder="품목·용도·추정 메모"></div>
+    <div style="display:flex;gap:8px;margin-top:4px">${e?`<button class="btn gray sm" onclick="accDel('${e.id}')">삭제</button>`:''}
+      <button class="btn line full" onclick="accCloseForm()">취소</button><button class="btn pri full" onclick="accSave('${e?e.id:''}')">저장</button></div>`;
+  $('emodal').classList.add('on');
+};
+window.accCloseForm=()=>$('emodal').classList.remove('on');
+window.accSplitVat=function(){ const t=num($('ef-total').value); if(t<=0){ toast('합계를 먼저 입력하세요.'); return; } const sup=Math.round(t/1.1); $('ef-supply').value=sup; $('ef-vat').value=t-sup; };
+window.accZeroVat=function(){ const t=num($('ef-total').value); $('ef-supply').value=t; $('ef-vat').value=0; };
+window.accSave=async function(id){ const total=num($('ef-total').value); if(total<=0){ toast('합계를 입력하세요.'); return; }
+  let sup=num($('ef-supply').value), vat=num($('ef-vat').value); if(sup===0&&vat===0){ sup=Math.round(total/1.1); vat=total-sup; }
+  const data={ date:$('ef-date').value, cat:$('ef-cat').value, vendor:$('ef-vendor').value.trim(), supply:sup, vat, total, pay:$('ef-pay').value, pjt:$('ef-pjt').value, note:$('ef-note').value.trim() };
+  try{ const eid=id||('exp_'+Date.now()); if(!id) data.createdAt=serverTimestamp(); await setDoc(doc(db,'gihoek_expenses',eid),data,{merge:true}); accCloseForm(); toast('저장했습니다.'); }
+  catch(e){ toast('저장 실패: '+(e.code||e.message)); } };
+window.accDel=async function(id){ if(!confirm('이 비용을 삭제할까요?')) return; try{ await deleteDoc(doc(db,'gihoek_expenses',id)); accCloseForm(); toast('삭제했습니다.'); }catch(e){ toast('삭제 실패: '+(e.code||e.message)); } };
 
 window.tab=tab;
 </script>
