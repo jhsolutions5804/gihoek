@@ -899,7 +899,7 @@ window.openSettle=function(id){ viewSetId=id; const s=settlements.find(x=>x.id==
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div><div style="font-size:16px;font-weight:800">${s.docType==='invoice'?'대금청구서':'지급예정서'}</div>
         <div class="small muted" style="margin-top:3px"><span class="pill">${p?p.code:'-'}</span> &nbsp;${s.no} · 발행 ${s.issueDate}${s.author?' · '+s.author:''}</div></div>
-        <div style="display:flex;gap:6px"><button class="btn line sm" onclick="previewSettle('${s.id}')">🖨 인쇄/PDF</button>${setActive(s)?`<button class="btn gray sm" onclick="voidSettle('${s.id}')">폐기</button>`:''}</div></div>
+        <div style="display:flex;gap:6px"><button class="btn line sm" onclick="previewSettle('${s.id}')">🖨 인쇄/PDF</button>${setActive(s)?`<button class="btn gray sm" onclick="voidSettle('${s.id}')">폐기</button>`:`<button class="btn gray sm" style="color:#c00" onclick="deleteSettle('${s.id}')">🗑 삭제</button>`}</div></div>
       <div class="partybox">${party('발신 (공급자)',s.sender)}${party(s.docType==='invoice'?'수신 (원청)':'수신 (하청)',s.recipient)}</div>
       <div class="small muted" style="margin-bottom:10px">기준월 ${s.baseMonth} · ${s.docType==='invoice'?'지급요청일':'지급예정일'} ${s.payDate||'-'} · 정산방식 ${{progress:'공정 자동',qty:'수량정산',manday:'공수',manual:'직접입력'}[s.method]}</div>
       <div class="scroll"><table class="items"><thead><tr><th>#</th><th>내역</th><th>비고</th><th class="right">금액</th></tr></thead>
@@ -912,6 +912,8 @@ window.openSettle=function(id){ viewSetId=id; const s=settlements.find(x=>x.id==
 };
 window.voidSettle=async function(id){ if(!confirm('이 정산서를 폐기할까요? 집계에서 제외됩니다.')) return;
   try{ await setDoc(doc(db,'gihoek_settlements',id),{status:'void',voidedAt:serverTimestamp()},{merge:true}); toast('폐기했습니다.'); renderSettle(); }catch(e){ toast('실패: '+(e.code||e.message)); } };
+window.deleteSettle=async function(id){ if(!confirm('폐기된 정산서를 완전히 삭제할까요?\n이 작업은 되돌릴 수 없습니다.')) return;
+  try{ await deleteDoc(doc(db,'gihoek_settlements',id)); toast('삭제했습니다.'); renderSettle(); }catch(e){ toast('삭제 실패: '+(e.code||e.message)); } };
 
 function settleDocHTML(s){ const title=s.docType==='invoice'?'대 금 청 구 서':'지 급 예 정 서';
   const dateLabel=s.docType==='invoice'?'지급요청일':'지급예정일'; const sd=s.sender||{}, rc=s.recipient||{}; const p=projects.find(x=>x.id===s.pjtId);
