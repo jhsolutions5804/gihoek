@@ -77,6 +77,33 @@
   .void-tag{display:inline-block; font-size:10px; font-weight:700; background:#f1f3f7; color:#90a; color:var(--sub); padding:2px 7px; border-radius:9px; margin-left:6px}
   .rev-tag{display:inline-block; font-size:10px; font-weight:700; background:#fff3e0; color:#e08a1e; padding:2px 7px; border-radius:9px; margin-left:6px}
   .void-banner{background:#f1f3f7; color:var(--sub); border:1px solid var(--line); border-radius:10px; padding:10px 13px; font-size:12.5px; font-weight:600; margin-bottom:12px}
+  .seg-btn{flex:1; padding:11px; border-radius:9px; border:2px solid var(--line); background:#fff; color:var(--sub); font-weight:700; font-size:13.5px; cursor:pointer; font-family:inherit}
+  .seg-btn.on{border-color:var(--blue); background:var(--blue-pale); color:var(--blue)}
+  .estpick{display:flex; align-items:center; gap:10px; border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:8px; cursor:pointer; background:#fafbfd}
+  .estpick.on{border-color:var(--blue); background:var(--blue-pale)}
+  .estpick input{width:17px; height:17px; accent-color:var(--blue)}
+  .note-amber{font-size:11.5px; color:var(--amber); background:#fff7ec; border:1px solid #f3e2c6; border-radius:8px; padding:8px 10px; margin-bottom:10px}
+  .ptab{width:100%; border-collapse:collapse}
+  .ptab th{font-size:10.5px; color:var(--sub); font-weight:700; text-align:right; padding:6px 5px; border-bottom:1.5px solid var(--line); white-space:nowrap}
+  .ptab th.l{text-align:left}
+  .ptab td{padding:6px 5px; border-bottom:1px solid #f0f3f7; font-size:12px; text-align:right; white-space:nowrap}
+  .ptab td.l{text-align:left; font-weight:600}
+  .ni{width:56px; border:1px solid var(--line); border-radius:6px; padding:5px 6px; font-size:12px; text-align:right; font-family:inherit}
+  .zsel{width:118px; border:1px solid var(--line); border-radius:6px; padding:4px 5px; font-size:11px; margin-top:3px; font-family:inherit; background:#fff}
+  .bill{font-weight:800; color:var(--money); background:#eef4fc}
+  #pv .setdoc h1{text-align:center; font-size:22px; letter-spacing:8px; margin:0 0 14px; font-weight:800}
+  #pv .setdoc .meta{display:flex; justify-content:space-between; font-size:11px; color:#555; margin-bottom:10px}
+  #pv .setdoc .parties{display:flex; gap:10px; margin-bottom:12px}
+  #pv .setdoc .pcard{flex:1; border:1px solid #cfd8e6; border-radius:6px; padding:9px 11px}
+  #pv .setdoc .pcard .h{font-size:10px; color:#1D5BA6; font-weight:700; margin-bottom:5px}
+  #pv .setdoc .pcard .nm{font-size:13.5px; font-weight:800}
+  #pv .setdoc .pcard .ln{font-size:11px; color:#444; margin-top:2px}
+  #pv .setdoc .info{border:1px solid #cfd8e6; border-radius:6px; padding:9px 11px; margin-bottom:12px; font-size:11px; line-height:1.9}
+  #pv .setdoc table{width:100%; border-collapse:collapse}
+  #pv .setdoc th,#pv .setdoc td{border:1px solid #cfd8e6; padding:6px 8px; font-size:11px}
+  #pv .setdoc th{background:#eaf2fc; color:#1D5BA6}
+  #pv .setdoc tfoot td{font-weight:700; background:#f6f9fd}
+  #pv .setdoc .stamp{margin-top:20px; text-align:right; font-size:12px}
   .partybox{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0}
   @media(max-width:560px){ .partybox{grid-template-columns:1fr} }
   .party{border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:#fafbfd}
@@ -123,6 +150,16 @@
 
 <div class="toast" id="toast"></div>
 
+<div id="pv" style="display:none; position:fixed; inset:0; background:rgba(15,25,40,.55); z-index:80; align-items:flex-start; justify-content:center; padding:18px; overflow:auto">
+  <div style="background:#fff; border-radius:12px; max-width:720px; width:100%; margin:auto">
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--line)">
+      <b style="font-size:14px">정산서 미리보기</b>
+      <div style="display:flex; gap:8px"><button class="btn gray sm" onclick="pvClose()">닫기</button><button class="btn pri sm" onclick="pvPrint()">🖨 인쇄 · PDF 저장</button></div>
+    </div>
+    <div style="padding:18px; background:#f4f6fa"><div id="pv-body" style="background:#fff; padding:22px; border:1px solid var(--line); border-radius:6px"></div></div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
@@ -152,8 +189,8 @@ const compById=id=>companies.find(c=>c.id===id)||null;
 
 const isActive=e=> e.status!=='void';
 const pjtEstSum=pid=>estimates.filter(e=>e.pjtId===pid && isActive(e)).reduce((s,e)=>s+estSupply(e),0);
-const pjtBilled=pid=>settlements.filter(s=>s.pjtId===pid&&s.docType==='invoice').reduce((a,s)=>a+(s.amount||0),0);
-const pjtPaid =pid=>settlements.filter(s=>s.pjtId===pid&&s.docType==='payment').reduce((a,s)=>a+(s.amount||0),0);
+const pjtBilled=pid=>settlements.filter(s=>s.pjtId===pid&&s.docType==='invoice'&&s.status!=='void').reduce((a,s)=>a+(s.amount||0),0);
+const pjtPaid =pid=>settlements.filter(s=>s.pjtId===pid&&s.docType==='payment'&&s.status!=='void').reduce((a,s)=>a+(s.amount||0),0);
 
 const SEED_COMPANIES=[
   {id:'jhsol', company:'제이에이치솔루션', ceo:'김종화', bizno:'383-09-02847', tel:'010-6650-5804', email:'jh.kim@jhsol.kr', address:'', roleSupplier:true,  roleClient:false},
@@ -190,13 +227,13 @@ async function startApp(){
   }catch(e){}
   onSnapshot(collection(db,'gihoek_projects'), s=>{ projects=[]; s.forEach(d=>projects.push({id:d.id,...d.data()})); projects.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0)); if(curTab==='pjt'&&!detailId&&!pjtForm) renderPjt(); });
   onSnapshot(collection(db,'gihoek_estimates'), s=>{ estimates=[]; s.forEach(d=>estimates.push({id:d.id,...d.data()})); estimates.sort((a,b)=>{ const dc=(b.date||'').localeCompare(a.date||''); if(dc) return dc; return (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0); }); if(curTab==='pjt'&&detailId) pjtDetail(detailId); else if(curTab==='pjt'&&!pjtForm) renderPjt(); if(curTab==='est'&&!estDraft&&!viewEstId) renderEst(); });
-  onSnapshot(collection(db,'gihoek_settlements'), s=>{ settlements=[]; s.forEach(d=>settlements.push({id:d.id,...d.data()})); if(curTab==='pjt') { detailId?pjtDetail(detailId):renderPjt(); } });
+  onSnapshot(collection(db,'gihoek_settlements'), s=>{ settlements=[]; s.forEach(d=>settlements.push({id:d.id,...d.data()})); if(curTab==='pjt') { detailId?pjtDetail(detailId):renderPjt(); } else if(curTab==='settle'&&!settleDraft&&!viewSetId) renderSettle(); else if(curTab==='acct') renderAcct(); });
   onSnapshot(collection(db,'gihoek_companies'), s=>{ companies=[]; s.forEach(d=>companies.push({id:d.id,...d.data()})); companies.sort((a,b)=>(a.company||'').localeCompare(b.company||'')); if(curTab==='comp'&&!compForm) renderComp(); });
   renderPjt();
 }
 
 let curTab='pjt';
-function tab(t){ curTab=t; detailId=null; estDraft=null; viewEstId=null; pjtForm=false; compForm=false;
+function tab(t){ curTab=t; detailId=null; estDraft=null; viewEstId=null; pjtForm=false; compForm=false; settleDraft=null; viewSetId=null;
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on', x.dataset.tab===t));
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('on')); $('v-'+t).classList.add('on');
   ({pjt:renderPjt, comp:renderComp, est:renderEst, settle:renderSettle, acct:renderAcct})[t](); window.scrollTo(0,0); }
@@ -502,7 +539,285 @@ window.saveComp=async function(id){ const company=$('cf-company').value.trim(); 
 window.delComp=async function(id){ if(!confirm('이 업체를 삭제할까요? (기존 견적에 저장된 정보는 유지됩니다)')) return; try{ await deleteDoc(doc(db,'gihoek_companies',id)); toast('삭제했습니다.'); renderComp(); }catch(e){ toast('삭제 실패: '+(e.code||e.message)); } };
 
 /* ---------------- 정산 / 회계 (다음 단계) ---------------- */
-function renderSettle(){ $('v-settle').innerHTML=`<div class="soon"><div class="big">🧾</div><div style="font-weight:700;color:var(--ink)">정산 — 준비 중</div><div class="small" style="margin-top:6px">대금청구서·지급예정서를 PJT별로 작성·조회합니다.<br>다음 단계에서 추가됩니다.</div></div>`; }
+/* ---------------- 정산 ---------------- */
+const ZONES=[
+  {id:'fiz', name:'3F FIZ', total:39, eqs:Array.from({length:39},(_,i)=>String(801+i)), kw:['3F FIZ','FIZ']},
+  {id:'xob', name:'X-OB', total:19, eqs:['861','862','863','864','865','866','867','868','869','870','871','872','873','874','875','876','877','878','879'], kw:['X-OB','XOB']},
+  {id:'c3', name:'복합3동', total:14, eqs:['351','352','353','354','355','356','357','358','359','360','361','362','363','364'], kw:['복합3동','복합 3동']},
+  {id:'c4', name:'복합4동', total:14, eqs:['302A','302B','302C','302D','302E','302F','302G','302H','302I','302J','302K','302L','302M','302N'], kw:['복합4동','복합 4동']},
+  {id:'wob', name:'W-OB', total:81, eqs:Array.from({length:81},(_,i)=>'W-'+(101+i)), kw:['W-OB','WOB']},
+  {id:'mfr', name:'2F 제조부속실', total:16, eqs:['801','802','811','812','813','814','815','816','817','818','819','820','821','822','823','824'], kw:['제조부속실','2F 제조']},
+];
+const INSTALL_ITEMS=['내진스토퍼','다이크','실링','동판','결선'];
+const TEAM_RATE=190000;
+const zoneGuess=title=>{ const t=title||''; const z=ZONES.find(z=>z.kw.some(k=>t.includes(k))); return z?z.id:''; };
+const setProjects=()=>projects; // alias
+
+let settleDraft=null, viewSetId=null;
+const setActive=s=>s.status!=='void';
+
+function renderSettle(){ settleDraft=null; viewSetId=null;
+  const inv=settlements.filter(s=>s.docType==='invoice'&&setActive(s)).reduce((a,s)=>a+(s.total||0),0);
+  const pay=settlements.filter(s=>s.docType==='payment'&&setActive(s)).reduce((a,s)=>a+(s.total||0),0);
+  const sorted=[...settlements].sort((a,b)=>(b.issueDate||'').localeCompare(a.issueDate||'')||((b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)));
+  $('v-settle').innerHTML=`<div class="sec-h"><h2>정산</h2><button class="btn pri sm" onclick="newSettle()">+ 정산서 발행</button></div>
+    <div class="sumgrid" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
+      <div class="sumcell"><div class="l">대금청구 누계</div><div class="v">${won(inv)}</div></div>
+      <div class="sumcell"><div class="l">지급예정 누계</div><div class="v">${won(pay)}</div></div></div>
+    ${sorted.length? sorted.map(s=>{ const p=projects.find(x=>x.id===s.pjtId); const v=!setActive(s);
+      return `<div class="litem ${v?'void':''}" onclick="openSettle('${s.id}')"><div class="d"><div class="ti">${s.docType==='invoice'?'대금청구서':'지급예정서'} <span class="pill">${s.no}</span>${v?'<span class="void-tag">폐기</span>':''}</div><div class="mt"><span class="pill">${p?p.code:'-'}</span> &nbsp;기준월 ${s.baseMonth} · 발행 ${s.issueDate}${s.recipient?.company?' · '+s.recipient.company:''}</div></div><div class="amt">${won(s.total)}</div></div>`;
+    }).join('') : '<div class="empty">발행된 정산서가 없습니다.</div>'}`;
+}
+window.renderSettle=renderSettle;
+
+window.newSettle=function(pjtId){
+  if(!projects.length){ toast('먼저 프로젝트를 등록하세요.'); tab('pjt'); return; }
+  const sup=supplierList();
+  settleDraft={ docType:'invoice', pjtId:pjtId||projects[0].id, method:'progress',
+    baseMonth:new Date().toISOString().slice(0,7), issueDate:new Date().toISOString().slice(0,10), payDate:'',
+    senderId:(sup.find(c=>c.company==='제이에이치솔루션')?.id)||sup[0]?.id||'', recipientId:'',
+    estIds:[], estZone:{}, deposit:{}, prog:{}, mandayInput:null, mandayAuto:null,
+    manualItems:[{name:'',spec:'',qty:1,price:0,amount:0},{name:'',spec:'',qty:1,price:0,amount:0}] };
+  tabSilent('settle'); drawSettleForm();
+};
+
+function setOptCompanies(list,sel){ return list.map(c=>`<option value="${c.id}" ${c.id===sel?'selected':''}>${c.company}${c.ceo?' ('+c.ceo+')':''}</option>`).join(''); }
+
+function drawSettleForm(){ const d=settleDraft; const pjtEsts=estimates.filter(e=>e.pjtId===d.pjtId && isActive(e));
+  $('v-settle').innerHTML=`<button class="back" onclick="renderSettle()">← 정산 목록</button>
+  <div class="card">
+    <div class="field"><label>정산서 종류</label>
+      <div style="display:flex;gap:8px">
+        <button class="seg-btn ${d.docType==='invoice'?'on':''}" onclick="setS('docType','invoice')">대금청구서<div class="small" style="font-weight:400">원청에게 청구</div></button>
+        <button class="seg-btn ${d.docType==='payment'?'on':''}" onclick="setS('docType','payment')">지급예정서<div class="small" style="font-weight:400">하청에게 지급</div></button></div></div>
+    <div class="row2">
+      <div class="field"><label>프로젝트</label><select class="sel" onchange="setS('pjtId',this.value)">${projects.map(p=>`<option value="${p.id}" ${p.id===d.pjtId?'selected':''}>${p.code}</option>`).join('')}</select></div>
+      <div class="field"><label>정산 방식</label><select class="sel" onchange="setS('method',this.value)">
+        <option value="progress" ${d.method==='progress'?'selected':''}>공정율 연동</option>
+        <option value="manday" ${d.method==='manday'?'selected':''}>공수 연동</option>
+        <option value="manual" ${d.method==='manual'?'selected':''}>직접 입력</option></select></div></div>
+    <div class="row2">
+      <div class="field"><label>기준월</label><input class="inp" type="month" value="${d.baseMonth}" onchange="setS('baseMonth',this.value)"></div>
+      <div class="field"><label>발행일</label><input class="inp" type="date" value="${d.issueDate}" onchange="setS2('issueDate',this.value)"></div></div>
+    <div class="field"><label>${d.docType==='invoice'?'지급요청일':'지급예정일'}</label><input class="inp" type="date" value="${d.payDate}" onchange="setS2('payDate',this.value)"></div>
+    <div class="row2">
+      <div class="field"><label>발신자 (우리)</label><select class="sel" onchange="setS2('senderId',this.value)">${setOptCompanies(supplierList(),d.senderId)}</select></div>
+      <div class="field"><label>수신자 (${d.docType==='invoice'?'원청':'하청'})</label><select class="sel" onchange="setS2('recipientId',this.value)"><option value="">— 거래처 선택 —</option>${setOptCompanies(clientList(),d.recipientId)}</select></div></div>
+  </div>
+  ${d.method==='manual'? setManualCard() : d.method==='manday'? setMandayCard() : setProgressCard(pjtEsts)}
+  <div class="card" id="set-tot"></div>
+  <button class="btn pri full" id="set-save" onclick="publishSettle()">정산서 발행</button>
+  <div style="height:30px"></div>`;
+  renderSetTot();
+}
+window.setS=function(k,v){ settleDraft[k]=v; drawSettleForm(); };
+window.setS2=function(k,v){ settleDraft[k]=v; };
+
+/* 공정율 */
+function setProgressCard(pjtEsts){ const d=settleDraft;
+  return `<div class="card"><div class="sec-h"><h2>견적 연동 (공정율)</h2>${d.estIds.length?`<button class="btn line sm" onclick="fetchProgress()">⟳ 공정 데이터 불러오기</button>`:''}</div>
+    <div class="note-amber">견적을 고르고 “공정 데이터 불러오기”를 누르면, 워크스페이스에서 섹터별 반입·설치 수를 읽어옵니다. 반입 80% + 설치 20% + 보증금 10%로 청구액을 계산하고, 기청구액은 차감합니다.</div>
+    ${pjtEsts.length? pjtEsts.map(e=>`<label class="estpick ${d.estIds.includes(e.id)?'on':''}">
+      <input type="checkbox" ${d.estIds.includes(e.id)?'checked':''} onchange="toggleSetEst('${e.id}','${zoneGuess(e.title)}')">
+      <div style="flex:1"><div style="font-size:13px;font-weight:700">${e.title}</div><div class="small muted">${e.no} · 공급가 ${won(estSupply(e))}</div></div></label>`).join('') : '<div class="empty">이 프로젝트의 유효 견적이 없습니다.</div>'}
+    ${d.estIds.length?`<div style="overflow-x:auto;margin-top:10px"><table class="ptab">
+      <thead><tr><th class="l">견적 / 섹터</th><th>반입</th><th>설치</th><th>보증</th><th>누적청구</th><th>기청구</th><th>이번청구</th></tr></thead>
+      <tbody>${d.estIds.map(id=>setEstRowHtml(id)).join('')}</tbody></table></div>
+      <div class="small muted" style="margin-top:6px">반입·설치 칸은 직접 수정할 수 있습니다.</div>`:''}
+  </div>`;
+}
+function setEstRowHtml(id){ const d=settleDraft; const e=estimates.find(x=>x.id===id); const r=calcSetRow(id);
+  return `<tr><td class="l"><div style="font-weight:600">${(e.title||'').slice(0,16)}</div>
+    <select class="zsel" onchange="setZone('${id}',this.value)">${ZONES.map(z=>`<option value="${z.id}" ${z.id===(d.estZone[id])?'selected':''}>${z.name} (${z.total})</option>`).join('')}</select></td>
+    <td><input class="ni" value="${r.banip}" onchange="setProg('${id}','banip',this.value)"></td>
+    <td><input class="ni" value="${r.install}" onchange="setProg('${id}','install',this.value)"></td>
+    <td><input type="checkbox" ${d.deposit[id]?'checked':''} onchange="toggleSetDep('${id}')" style="accent-color:var(--blue)"></td>
+    <td>${won(r.cum)}</td><td class="muted">${won(r.prior)}</td><td class="bill">${won(r.thisBill)}</td></tr>`;
+}
+function calcSetRow(id){ const d=settleDraft; const e=estimates.find(x=>x.id===id); const sup=estSupply(e);
+  const zid=d.estZone[id]; const z=ZONES.find(z=>z.id===zid); const qty=z?z.total:1;
+  const pg=d.prog[id]||{banip:0,install:0};
+  const banipAmt=Math.round(sup*0.8*(pg.banip/qty));
+  const installAmt=Math.round(sup*0.2*(pg.install/qty));
+  const depAmt=d.deposit[id]?Math.round(sup*0.1):0;
+  const cum=banipAmt+installAmt+depAmt;
+  const prior=priorByEst(id);
+  const thisBill=Math.max(0,cum-prior);
+  return {banip:pg.banip, install:pg.install, qty, cum, prior, thisBill};
+}
+function priorByEst(estId){ return settlements.filter(s=>setActive(s)&&s.docType==='invoice'&&s.perEst&&s.perEst[estId]).reduce((a,s)=>a+s.perEst[estId],0); }
+window.toggleSetEst=function(id,guessZone){ const d=settleDraft; const i=d.estIds.indexOf(id);
+  if(i<0){ d.estIds.push(id); if(!d.estZone[id]) d.estZone[id]=guessZone||ZONES[0].id; if(!d.prog[id]) d.prog[id]={banip:0,install:0}; }
+  else { d.estIds.splice(i,1); } drawSettleForm(); };
+window.setZone=function(id,z){ settleDraft.estZone[id]=z; renderSetTot(); refreshProgTable(); };
+window.setProg=function(id,k,v){ settleDraft.prog[id]=settleDraft.prog[id]||{banip:0,install:0}; settleDraft.prog[id][k]=Math.max(0,num(v)); renderSetTot(); refreshProgTable(); };
+window.toggleSetDep=function(id){ settleDraft.deposit[id]=!settleDraft.deposit[id]; renderSetTot(); refreshProgTable(); };
+function refreshProgTable(){ const tb=document.querySelector('.ptab tbody'); if(tb) tb.innerHTML=settleDraft.estIds.map(id=>setEstRowHtml(id)).join(''); }
+
+window.fetchProgress=async function(){ const d=settleDraft; if(!d.estIds.length){ toast('견적을 먼저 선택하세요.'); return; }
+  toast('공정 데이터 불러오는 중...');
+  try{
+    const [y,m]=d.baseMonth.split('-').map(Number); const lastDay=new Date(y,m,0).getDate();
+    const zonesNeeded=[...new Set(d.estIds.map(id=>d.estZone[id]))];
+    const cum={}; zonesNeeded.forEach(z=>cum[z]={});
+    const tasks=[];
+    for(let day=1; day<=lastDay; day++){ const dk=y+'-'+String(m).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+      // 6월 이전(프로젝트 시작 전)도 포함하려면 별도 처리 필요하나, 누적은 기준월 진행분 위주로 우선 집계
+      tasks.push((async()=>{ try{ const snap=await getDocs(collection(db,'progress_checks_'+dk)); snap.forEach(zd=>{ const zid=zd.id; if(cum[zid]){ const ch=zd.data().checks||{}; Object.keys(ch).forEach(k=>{ if(ch[k]) cum[zid][k]=true; }); } }); }catch(e){} })());
+    }
+    // 기준월 이전 누적도 합산 (프로젝트 시작 ~ 기준월 직전)
+    const start=new Date(2026,5,1); const endPrev=new Date(y,m-1,1);
+    for(let dt=new Date(start); dt<endPrev; dt.setDate(dt.getDate()+1)){ const dk=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+      tasks.push((async()=>{ try{ const snap=await getDocs(collection(db,'progress_checks_'+dk)); snap.forEach(zd=>{ const zid=zd.id; if(cum[zid]){ const ch=zd.data().checks||{}; Object.keys(ch).forEach(k=>{ if(ch[k]) cum[zid][k]=true; }); } }); }catch(e){} })());
+    }
+    await Promise.all(tasks);
+    d.estIds.forEach(id=>{ const zid=d.estZone[id]; const z=ZONES.find(z=>z.id===zid); const ch=cum[zid]||{};
+      let banip=0, install=0;
+      if(z){ z.eqs.forEach(eq=>{ if(ch[eq+'_반입']) banip++; if(INSTALL_ITEMS.every(it=>ch[eq+'_'+it])) install++; }); }
+      d.prog[id]={banip, install}; });
+    renderSetTot(); refreshProgTable(); toast('공정 데이터를 반영했습니다.');
+  }catch(e){ toast('불러오기 실패: '+(e.code||e.message)); }
+};
+
+/* 공수 */
+function setMandayCard(){ const d=settleDraft;
+  const md=d.mandayInput!=null?d.mandayInput:(d.mandayAuto!=null?d.mandayAuto:0);
+  const prior=priorManday();
+  return `<div class="card"><div class="sec-h"><h2>공수 연동</h2><button class="btn line sm" onclick="fetchManday()">⟳ 공수 불러오기</button></div>
+    <div class="note-amber">기준월(${d.baseMonth}) 공수 합계를 워크스페이스에서 읽어옵니다. 단가 ${won(TEAM_RATE)}원/공수. 직접 수정 가능합니다.</div>
+    <table class="ptab"><thead><tr><th class="l">항목</th><th>공수</th><th>단가</th><th>금액</th></tr></thead>
+    <tbody><tr><td class="l">${d.baseMonth} 기술인력 투입</td>
+      <td><input class="ni" value="${md}" onchange="setMd(this.value)"></td><td>${won(TEAM_RATE)}</td><td class="bill">${won(md*TEAM_RATE)}</td></tr>
+      ${prior?`<tr><td class="l muted">기지급 공수</td><td class="muted">${prior}</td><td></td><td class="muted">-${won(prior*TEAM_RATE)}</td></tr>`:''}</tbody></table>
+    ${d.mandayAuto!=null?`<div class="small muted" style="margin-top:6px">자동 집계: ${d.mandayAuto} 공수</div>`:''}</div>`;
+}
+function priorManday(){ return settlements.filter(s=>setActive(s)&&s.docType==='payment'&&s.method==='manday').reduce((a,s)=>a+(s.mandayUsed||0),0); }
+window.setMd=function(v){ settleDraft.mandayInput=num(v); drawSettleForm(); };
+window.fetchManday=async function(){ const d=settleDraft; toast('공수 불러오는 중...');
+  try{ const [y,m]=d.baseMonth.split('-').map(Number); const lastDay=new Date(y,m,0).getDate(); let sum=0; const tasks=[];
+    for(let day=1; day<=lastDay; day++){ const dk=y+'-'+String(m).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+      tasks.push((async()=>{ try{ const sn=await getDoc(doc(db,'worker_manday',dk)); if(sn.exists()){ const md=sn.data().md||{}; Object.values(md).forEach(v=>sum+=Number(v)||0); } }catch(e){} })()); }
+    await Promise.all(tasks); d.mandayAuto=Math.round(sum*10)/10; d.mandayInput=d.mandayAuto; drawSettleForm(); toast('공수 '+d.mandayAuto+' 반영했습니다.');
+  }catch(e){ toast('불러오기 실패: '+(e.code||e.message)); }
+};
+
+/* 직접 입력 */
+function setManualCard(){ return `<div class="card"><div class="sec-h"><h2>직접 입력</h2></div>
+  <div class="scroll"><table class="items"><colgroup><col class="c-no"><col><col><col class="c-qty"><col class="c-price"><col class="c-amt"><col class="c-del"></colgroup>
+    <thead><tr><th>#</th><th>품명</th><th>규격</th><th>수량</th><th>단가</th><th>금액</th><th></th></tr></thead><tbody id="sm-rows"></tbody></table></div>
+  <button class="btn gray sm" style="margin-top:10px" onclick="addSm()">+ 품목 추가</button></div>`; }
+function drawSmRows(){ $('sm-rows').innerHTML=settleDraft.manualItems.map((it,i)=>`<tr>
+  <td class="muted small">${i+1}</td>
+  <td><input class="ti" value="${(it.name||'').replace(/"/g,'&quot;')}" placeholder="품명" oninput="smSet(${i},'name',this.value)"></td>
+  <td><input class="ti" value="${(it.spec||'').replace(/"/g,'&quot;')}" placeholder="규격" oninput="smSet(${i},'spec',this.value)"></td>
+  <td><input class="ti num" id="sq-${i}" type="number" value="${it.qty}" oninput="smQty(${i},this.value)"></td>
+  <td><input class="ti num" id="sp-${i}" type="number" value="${it.price}" oninput="smPrice(${i},this.value)"></td>
+  <td><input class="ti num" id="sa-${i}" type="number" value="${Math.round(itemAmt(it))}" oninput="smAmt(${i},this.value)"></td>
+  <td><button class="del" onclick="delSm(${i})">×</button></td></tr>`).join(''); renderSetTot(); }
+window.smSet=function(i,k,v){ settleDraft.manualItems[i][k]=v; };
+window.smQty=function(i,v){ const it=settleDraft.manualItems[i]; it.qty=num(v); it.amount=Math.round(it.qty*it.price); if($('sa-'+i))$('sa-'+i).value=it.amount; renderSetTot(); };
+window.smPrice=function(i,v){ const it=settleDraft.manualItems[i]; it.price=num(v); it.amount=Math.round(it.qty*it.price); if($('sa-'+i))$('sa-'+i).value=it.amount; renderSetTot(); };
+window.smAmt=function(i,v){ const it=settleDraft.manualItems[i]; it.amount=num(v); it.price=it.qty>0?Math.round(it.amount/it.qty):it.amount; if($('sp-'+i))$('sp-'+i).value=it.price; renderSetTot(); };
+window.addSm=function(){ settleDraft.manualItems.push({name:'',spec:'',qty:1,price:0,amount:0}); drawSmRows(); };
+window.delSm=function(i){ settleDraft.manualItems.splice(i,1); if(!settleDraft.manualItems.length) settleDraft.manualItems.push({name:'',spec:'',qty:1,price:0,amount:0}); drawSmRows(); };
+
+function setSupply(){ const d=settleDraft;
+  if(d.method==='manual') return d.manualItems.reduce((s,it)=>s+itemAmt(it),0);
+  if(d.method==='manday'){ const md=d.mandayInput!=null?d.mandayInput:(d.mandayAuto||0); return Math.round(md*TEAM_RATE); }
+  return d.estIds.reduce((s,id)=>s+calcSetRow(id).thisBill,0);
+}
+function renderSetTot(){ const d=settleDraft; const sup=setSupply(); const vat=Math.round(sup*0.1);
+  const label=d.docType==='invoice'?'청구':'지급';
+  if($('set-tot')) $('set-tot').innerHTML=`<div class="totbox" style="margin-top:0;border-top:none;padding-top:0">
+    <div class="totrow"><span class="muted">금번 ${label} 공급가액</span><span>${won(sup)} 원</span></div>
+    <div class="totrow"><span class="muted">부가세 (10%)</span><span>${won(vat)} 원</span></div>
+    <div class="totrow big"><span>금번 ${label}금액 합계</span><span>${won(sup+vat)} 원</span></div></div>`;
+  if(d.method==='manual'&&$('sm-rows')&&!$('sm-rows').children.length) drawSmRows();
+}
+
+function settleLines(){ const d=settleDraft;
+  if(d.method==='manual') return d.manualItems.filter(i=>(i.name||'').trim()).map(i=>({name:i.name.trim(),spec:i.spec||'',qty:i.qty||0,price:i.price||0,amount:Math.round(itemAmt(i))}));
+  if(d.method==='manday'){ const md=d.mandayInput!=null?d.mandayInput:(d.mandayAuto||0); return [{name:d.baseMonth+' 기술인력 투입',spec:'공수 '+md,qty:md,price:TEAM_RATE,amount:Math.round(md*TEAM_RATE)}]; }
+  return d.estIds.map(id=>{ const e=estimates.find(x=>x.id===id); const r=calcSetRow(id); const z=ZONES.find(z=>z.id===d.estZone[id]);
+    return {name:e.title,spec:(z?z.name:'')+' 반입 '+r.banip+'/'+r.qty+' · 설치 '+r.install+'/'+r.qty,qty:1,price:r.thisBill,amount:r.thisBill}; });
+}
+
+window.publishSettle=async function(){ const d=settleDraft; const sup=setSupply();
+  if(sup<=0){ toast('정산 금액이 없습니다.'); return; }
+  if(!d.recipientId){ if(!confirm('수신자(거래처)가 선택되지 않았습니다. 그래도 발행할까요?')) return; }
+  const yymm=d.issueDate.slice(2,4)+d.issueDate.slice(5,7);
+  const seq=settlements.filter(s=>s.docType===d.docType && (s.no||'').startsWith(yymm)).length+1;
+  const no=yymm+String(seq).padStart(3,'0'); const id='set_'+Date.now();
+  const snap=c=>c?{company:c.company,ceo:c.ceo||'',bizno:c.bizno||'',tel:c.tel||'',address:c.address||''}:null;
+  const perEst={}; let mandayUsed=0;
+  if(d.method==='progress') d.estIds.forEach(eid=>perEst[eid]=calcSetRow(eid).thisBill);
+  if(d.method==='manday') mandayUsed=d.mandayInput!=null?d.mandayInput:(d.mandayAuto||0);
+  const vat=Math.round(sup*0.1);
+  $('set-save').disabled=true;
+  try{ await setDoc(doc(db,'gihoek_settlements',id),{ pjtId:d.pjtId, no, docType:d.docType, method:d.method,
+      baseMonth:d.baseMonth, issueDate:d.issueDate, payDate:d.payDate||'',
+      senderId:d.senderId||'', sender:snap(compById(d.senderId)), recipientId:d.recipientId||'', recipient:snap(compById(d.recipientId)),
+      estIds:d.estIds||[], perEst, mandayUsed, lines:settleLines(),
+      supply:sup, vat, total:sup+vat, amount:sup, status:'active',
+      author:(me&&me.name)||'', authorUid:(me&&me.uid)||'', createdAt:serverTimestamp() });
+    toast((d.docType==='invoice'?'대금청구서':'지급예정서')+' '+no+' 발행'); renderSettle(); }
+  catch(e){ $('set-save').disabled=false; toast('발행 실패: '+(e.code||e.message)); }
+};
+
+window.openSettle=function(id){ viewSetId=id; const s=settlements.find(x=>x.id===id); if(!s){ renderSettle(); return; }
+  const p=projects.find(x=>x.id===s.pjtId); tabSilent('settle');
+  const party=(label,o)=>`<div class="party"><div class="pl">${label}</div><div class="pc">${o?.company||'-'}</div><div class="pd">${o?.ceo?'대표 '+o.ceo:''}${o?.bizno?' · '+o.bizno:''}</div>${o?.tel?`<div class="pd">${o.tel}</div>`:''}</div>`;
+  $('v-settle').innerHTML=`<button class="back" onclick="renderSettle()">← 정산 목록</button>
+    <div class="card">
+      ${!setActive(s)?'<div class="void-banner">🚫 폐기된 정산서입니다. 집계에서 제외됩니다.</div>':''}
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div><div style="font-size:16px;font-weight:800">${s.docType==='invoice'?'대금청구서':'지급예정서'}</div>
+        <div class="small muted" style="margin-top:3px"><span class="pill">${p?p.code:'-'}</span> &nbsp;${s.no} · 발행 ${s.issueDate}${s.author?' · '+s.author:''}</div></div>
+        <div style="display:flex;gap:6px"><button class="btn line sm" onclick="previewSettle('${s.id}')">🖨 인쇄/PDF</button>${setActive(s)?`<button class="btn gray sm" onclick="voidSettle('${s.id}')">폐기</button>`:''}</div></div>
+      <div class="partybox">${party('발신 (공급자)',s.sender)}${party(s.docType==='invoice'?'수신 (원청)':'수신 (하청)',s.recipient)}</div>
+      <div class="small muted" style="margin-bottom:10px">기준월 ${s.baseMonth} · ${s.docType==='invoice'?'지급요청일':'지급예정일'} ${s.payDate||'-'} · 정산방식 ${{progress:'공정율',manday:'공수',manual:'직접입력'}[s.method]}</div>
+      <div class="scroll"><table class="items"><thead><tr><th>#</th><th>내역</th><th>비고</th><th class="right">금액</th></tr></thead>
+        <tbody>${(s.lines||[]).map((it,i)=>`<tr><td class="muted small">${i+1}</td><td>${it.name}</td><td class="muted small">${it.spec||'-'}</td><td class="right" style="font-weight:700;color:var(--money)">${won(it.amount)}</td></tr>`).join('')}</tbody></table></div>
+      <div class="totbox"><div class="totrow"><span class="muted">공급가액</span><span>${won(s.supply)} 원</span></div>
+        <div class="totrow"><span class="muted">부가세 (10%)</span><span>${won(s.vat)} 원</span></div>
+        <div class="totrow big"><span>${s.docType==='invoice'?'청구금액':'지급금액'} 합계</span><span>${won(s.total)} 원</span></div></div>
+    </div>`;
+  window.scrollTo(0,0);
+};
+window.voidSettle=async function(id){ if(!confirm('이 정산서를 폐기할까요? 집계에서 제외됩니다.')) return;
+  try{ await setDoc(doc(db,'gihoek_settlements',id),{status:'void',voidedAt:serverTimestamp()},{merge:true}); toast('폐기했습니다.'); renderSettle(); }catch(e){ toast('실패: '+(e.code||e.message)); } };
+
+function settleDocHTML(s){ const title=s.docType==='invoice'?'대 금 청 구 서':'지 급 예 정 서';
+  const dateLabel=s.docType==='invoice'?'지급요청일':'지급예정일'; const sd=s.sender||{}, rc=s.recipient||{}; const p=projects.find(x=>x.id===s.pjtId);
+  const rows=(s.lines||[]).map((it,i)=>`<tr><td style="text-align:center">${i+1}</td><td>${it.name}</td><td>${it.spec||''}</td><td style="text-align:right">${won(it.amount)}</td></tr>`).join('');
+  return `<h1>${title}</h1>
+  <div class="meta"><span>발행번호: ${s.no}</span><span>발행일: ${s.issueDate}</span></div>
+  <div class="parties">
+    <div class="pcard"><div class="h">${s.docType==='invoice'?'수신 (원청)':'수신 (하청)'}</div><div class="nm">${rc.company||'-'}</div><div class="ln">${rc.ceo?'대표 '+rc.ceo:''}${rc.bizno?' / '+rc.bizno:''}</div>${rc.tel?`<div class="ln">${rc.tel}</div>`:''}</div>
+    <div class="pcard"><div class="h">발신 (공급자)</div><div class="nm">${sd.company||'-'}</div><div class="ln">${sd.ceo?'대표 '+sd.ceo:''}${sd.bizno?' / '+sd.bizno:''}</div>${sd.tel?`<div class="ln">${sd.tel}</div>`:''}</div></div>
+  <div class="info"><b>프로젝트</b> : ${p?p.code:'-'} &nbsp;&nbsp; <b>기준월</b> : ${s.baseMonth} &nbsp;&nbsp; <b>${dateLabel}</b> : ${s.payDate||'-'} &nbsp;&nbsp; <b>정산방식</b> : ${{progress:'공정율 연동',manday:'공수 연동',manual:'직접 입력'}[s.method]}</div>
+  <table><thead><tr><th style="width:34px">No</th><th>내역</th><th>비고</th><th style="width:130px">금액</th></tr></thead><tbody>${rows}</tbody>
+  <tfoot><tr><td colspan="3" style="text-align:right">공급가액</td><td style="text-align:right">${won(s.supply)}</td></tr>
+    <tr><td colspan="3" style="text-align:right">부가세 (10%)</td><td style="text-align:right">${won(s.vat)}</td></tr>
+    <tr><td colspan="3" style="text-align:right;font-size:14px">${s.docType==='invoice'?'청구금액 합계':'지급금액 합계'}</td><td style="text-align:right;font-size:14px">${won(s.total)}</td></tr></tfoot></table>
+  <div class="stamp">위와 같이 ${s.docType==='invoice'?'청구':'지급 예정 통보'}합니다.<br><br>${sd.company||''}　${sd.ceo?'대표 '+sd.ceo+' (인)':''}</div>`;
+}
+const SET_DOC_CSS=`*{box-sizing:border-box;font-family:'Malgun Gothic',sans-serif}body{margin:0;color:#1a2330;font-size:12px}
+  h1{text-align:center;font-size:25px;letter-spacing:10px;margin:0 0 16px;font-weight:800}
+  .meta{display:flex;justify-content:space-between;font-size:11px;color:#555;margin-bottom:10px}
+  .parties{display:flex;gap:10px;margin-bottom:12px}.pcard{flex:1;border:1px solid #cfd8e6;border-radius:6px;padding:10px 12px}
+  .pcard .h{font-size:10px;color:#1D5BA6;font-weight:700;margin-bottom:5px}.pcard .nm{font-size:14px;font-weight:800}.pcard .ln{font-size:11px;color:#444;margin-top:2px}
+  .info{border:1px solid #cfd8e6;border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:11.5px;line-height:1.9}
+  table{width:100%;border-collapse:collapse;margin-top:4px}th,td{border:1px solid #cfd8e6;padding:7px 8px;font-size:11.5px}
+  th{background:#eaf2fc;color:#1D5BA6}tfoot td{font-weight:700;background:#f6f9fd}.stamp{margin-top:22px;text-align:right;font-size:12px}`;
+window.previewSettle=function(id){ const s=settlements.find(x=>x.id===id); if(!s) return;
+  $('pv-body').innerHTML=`<div class="setdoc">${settleDocHTML(s)}</div>`; $('pv').dataset.sid=id; $('pv').style.display='flex'; document.body.style.overflow='hidden'; };
+window.pvClose=function(){ $('pv').style.display='none'; document.body.style.overflow=''; };
+window.pvPrint=function(){ const s=settlements.find(x=>x.id===$('pv').dataset.sid); if(!s) return;
+  const w=window.open('','_blank'); if(!w){ toast('팝업이 차단되었습니다.'); return; }
+  w.document.write(`<!doctype html><meta charset="utf-8"><title>${s.docType==='invoice'?'대금청구서':'지급예정서'} ${s.no}</title><style>@page{size:A4;margin:16mm}${SET_DOC_CSS}</style>${settleDocHTML(s)}<scr`+`ipt>window.onload=function(){setTimeout(function(){window.print();},250);}</scr`+`ipt>`);
+  w.document.close(); };
+
 function renderAcct(){ $('v-acct').innerHTML=`<div class="soon"><div class="big">📒</div><div style="font-weight:700;color:var(--ink)">회계 — 준비 중</div><div class="small" style="margin-top:6px">개별 손익 · 종합 현황 · 회계장부를 제공합니다.</div></div>`; }
 
 window.tab=tab;
