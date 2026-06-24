@@ -576,7 +576,7 @@ window.newSettle=function(pjtId){
   settleDraft={ docType:'invoice', pjtId:pjtId||projects[0].id, method:'progress',
     baseMonth:new Date().toISOString().slice(0,7), issueDate:new Date().toISOString().slice(0,10), payDate:'',
     senderId:(sup.find(c=>c.company==='제이에이치솔루션')?.id)||sup[0]?.id||'', recipientId:'',
-    estIds:[], estZone:{}, deposit:{}, prog:{}, mandayInput:null, mandayAuto:null,
+    estIds:[], estZone:{}, deposit:{}, prog:{}, eqs:{}, billOverride:{}, qtyInput:{}, qtyAmt:{}, mandayInput:null, mandayAuto:null,
     manualItems:[{name:'',spec:'',qty:1,price:0,amount:0},{name:'',spec:'',qty:1,price:0,amount:0}] };
   tabSilent('settle'); drawSettleForm();
 };
@@ -593,7 +593,8 @@ function drawSettleForm(){ const d=settleDraft; const pjtEsts=estimates.filter(e
     <div class="row2">
       <div class="field"><label>프로젝트</label><select class="sel" onchange="setS('pjtId',this.value)">${projects.map(p=>`<option value="${p.id}" ${p.id===d.pjtId?'selected':''}>${p.code}</option>`).join('')}</select></div>
       <div class="field"><label>정산 방식</label><select class="sel" onchange="setS('method',this.value)">
-        <option value="progress" ${d.method==='progress'?'selected':''}>공정율 연동</option>
+        <option value="progress" ${d.method==='progress'?'selected':''}>공정 연동 (반입·설치 자동)</option>
+        <option value="qty" ${d.method==='qty'?'selected':''}>수량 정산 (견적 품목별)</option>
         <option value="manday" ${d.method==='manday'?'selected':''}>공수 연동</option>
         <option value="manual" ${d.method==='manual'?'selected':''}>직접 입력</option></select></div></div>
     <div class="row2">
@@ -604,7 +605,7 @@ function drawSettleForm(){ const d=settleDraft; const pjtEsts=estimates.filter(e
       <div class="field"><label>발신자 (우리)</label><select class="sel" onchange="setS2('senderId',this.value)">${setOptCompanies(supplierList(),d.senderId)}</select></div>
       <div class="field"><label>수신자 (${d.docType==='invoice'?'원청':'하청'})</label><select class="sel" onchange="setS2('recipientId',this.value)"><option value="">— 거래처 선택 —</option>${setOptCompanies(clientList(),d.recipientId)}</select></div></div>
   </div>
-  ${d.method==='manual'? setManualCard() : d.method==='manday'? setMandayCard() : setProgressCard(pjtEsts)}
+  ${d.method==='manual'? setManualCard() : d.method==='manday'? setMandayCard() : d.method==='qty'? setQtyCard(pjtEsts) : setProgressCard(pjtEsts)}
   <div class="card" id="set-tot"></div>
   <button class="btn pri full" id="set-save" onclick="publishSettle()">정산서 발행</button>
   <div style="height:30px"></div>`;
@@ -613,46 +614,62 @@ function drawSettleForm(){ const d=settleDraft; const pjtEsts=estimates.filter(e
 window.setS=function(k,v){ settleDraft[k]=v; drawSettleForm(); };
 window.setS2=function(k,v){ settleDraft[k]=v; };
 
-/* 공정율 */
+/* 공정 연동 (자동) */
+function compactRanges(arr){ if(!arr||!arr.length) return '-';
+  const parsed=arr.map(s=>{const m=String(s).match(/^(.*?)(\d+)$/); return m?{stem:m[1],n:parseInt(m[2]),raw:s}:{stem:String(s),n:null,raw:String(s)};});
+  parsed.sort((a,b)=> a.stem===b.stem ? ((a.n||0)-(b.n||0)) : a.stem.localeCompare(b.stem));
+  const out=[]; let i=0;
+  while(i<parsed.length){ const p=parsed[i]; if(p.n==null){ out.push(p.raw); i++; continue; }
+    let j=i; while(j+1<parsed.length && parsed[j+1].stem===p.stem && parsed[j+1].n===parsed[j].n+1) j++;
+    out.push(j>i? parsed[i].raw+'~'+parsed[j].raw : p.raw); i=j+1; }
+  return out.join(', ');
+}
 function setProgressCard(pjtEsts){ const d=settleDraft;
-  return `<div class="card"><div class="sec-h"><h2>견적 연동 (공정율)</h2>${d.estIds.length?`<button class="btn line sm" onclick="fetchProgress()">⟳ 공정 데이터 불러오기</button>`:''}</div>
-    <div class="note-amber">견적을 고르고 “공정 데이터 불러오기”를 누르면, 워크스페이스에서 섹터별 반입·설치 수를 읽어옵니다. 반입 80% + 설치 20% + 보증금 10%로 청구액을 계산하고, 기청구액은 차감합니다.</div>
+  return `<div class="card"><div class="sec-h"><h2>견적 연동 (공정 자동)</h2>${d.estIds.length?`<button class="btn line sm" onclick="fetchProgress()">⟳ 공정 데이터 불러오기</button>`:''}</div>
+    <div class="note-amber">견적을 고르고 “공정 데이터 불러오기”를 누르면, 워크스페이스에서 반입·설치된 장비번호와 개수를 자동으로 읽어옵니다. 반입 80% + 설치 20% + 보증금 10%로 계산하며, 기청구액은 차감됩니다. 이번청구 금액은 직접 수정할 수 있습니다.</div>
     ${pjtEsts.length? pjtEsts.map(e=>`<label class="estpick ${d.estIds.includes(e.id)?'on':''}">
       <input type="checkbox" ${d.estIds.includes(e.id)?'checked':''} onchange="toggleSetEst('${e.id}','${zoneGuess(e.title)}')">
       <div style="flex:1"><div style="font-size:13px;font-weight:700">${e.title}</div><div class="small muted">${e.no} · 공급가 ${won(estSupply(e))}</div></div></label>`).join('') : '<div class="empty">이 프로젝트의 유효 견적이 없습니다.</div>'}
-    ${d.estIds.length?`<div style="overflow-x:auto;margin-top:10px"><table class="ptab">
-      <thead><tr><th class="l">견적 / 섹터</th><th>반입</th><th>설치</th><th>보증</th><th>누적청구</th><th>기청구</th><th>이번청구</th></tr></thead>
-      <tbody>${d.estIds.map(id=>setEstRowHtml(id)).join('')}</tbody></table></div>
-      <div class="small muted" style="margin-top:6px">반입·설치 칸은 직접 수정할 수 있습니다.</div>`:''}
+    <div id="prog-rows">${d.estIds.map(id=>setEstBlock(id)).join('')}</div>
   </div>`;
 }
-function setEstRowHtml(id){ const d=settleDraft; const e=estimates.find(x=>x.id===id); const r=calcSetRow(id);
-  return `<tr><td class="l"><div style="font-weight:600">${(e.title||'').slice(0,16)}</div>
-    <select class="zsel" onchange="setZone('${id}',this.value)">${ZONES.map(z=>`<option value="${z.id}" ${z.id===(d.estZone[id])?'selected':''}>${z.name} (${z.total})</option>`).join('')}</select></td>
-    <td><input class="ni" value="${r.banip}" onchange="setProg('${id}','banip',this.value)"></td>
-    <td><input class="ni" value="${r.install}" onchange="setProg('${id}','install',this.value)"></td>
-    <td><input type="checkbox" ${d.deposit[id]?'checked':''} onchange="toggleSetDep('${id}')" style="accent-color:var(--blue)"></td>
-    <td>${won(r.cum)}</td><td class="muted">${won(r.prior)}</td><td class="bill">${won(r.thisBill)}</td></tr>`;
+function setEstBlock(id){ const d=settleDraft; const e=estimates.find(x=>x.id===id); if(!e) return ''; const r=calcSetRow(id);
+  const z=ZONES.find(z=>z.id===d.estZone[id]);
+  const eqd=d.eqs[id]||{banipEqs:[],installEqs:[]};
+  return `<div style="border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-top:10px;background:#fafbfd">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <div style="font-weight:700;font-size:13px">${(e.title||'').slice(0,22)}</div>
+      <select class="zsel" onchange="setZone('${id}',this.value)" title="섹터(자동인식, 필요시 변경)">${ZONES.map(zz=>`<option value="${zz.id}" ${zz.id===d.estZone[id]?'selected':''}>${zz.name} (${zz.total})</option>`).join('')}</select>
+    </div>
+    <div class="small muted" style="margin-top:5px;line-height:1.7">
+      반입 <b>${r.banip}/${r.qty}</b> <span style="color:#0a3d7a">${compactRanges(eqd.banipEqs)}</span><br>
+      설치 <b>${r.install}/${r.qty}</b> <span style="color:#1b5e20">${compactRanges(eqd.installEqs)}</span></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:9px;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600"><input type="checkbox" ${d.deposit[id]?'checked':''} onchange="toggleSetDep('${id}')" style="accent-color:var(--blue)"> 보증금 10%</label>
+      <span class="small muted">자동계산 ${won(r.cum)} − 기청구 ${won(r.prior)} =</span>
+      <span style="display:flex;align-items:center;gap:5px;margin-left:auto"><span class="small muted">이번청구</span><input class="ni wide bill" value="${won(r.thisBill)}" onchange="setBill('${id}',this.value)"></span>
+    </div></div>`;
 }
 function calcSetRow(id){ const d=settleDraft; const e=estimates.find(x=>x.id===id); const sup=estSupply(e);
-  const zid=d.estZone[id]; const z=ZONES.find(z=>z.id===zid); const qty=z?z.total:1;
+  const z=ZONES.find(z=>z.id===d.estZone[id]); const qty=z?z.total:1;
   const pg=d.prog[id]||{banip:0,install:0};
   const banipAmt=Math.round(sup*0.8*(pg.banip/qty));
   const installAmt=Math.round(sup*0.2*(pg.install/qty));
   const depAmt=d.deposit[id]?Math.round(sup*0.1):0;
   const cum=banipAmt+installAmt+depAmt;
   const prior=priorByEst(id);
-  const thisBill=Math.max(0,cum-prior);
+  const auto=Math.max(0,cum-prior);
+  const thisBill=(d.billOverride[id]!=null)?d.billOverride[id]:auto;
   return {banip:pg.banip, install:pg.install, qty, cum, prior, thisBill};
 }
 function priorByEst(estId){ return settlements.filter(s=>setActive(s)&&s.docType==='invoice'&&s.perEst&&s.perEst[estId]).reduce((a,s)=>a+s.perEst[estId],0); }
 window.toggleSetEst=function(id,guessZone){ const d=settleDraft; const i=d.estIds.indexOf(id);
-  if(i<0){ d.estIds.push(id); if(!d.estZone[id]) d.estZone[id]=guessZone||ZONES[0].id; if(!d.prog[id]) d.prog[id]={banip:0,install:0}; }
+  if(i<0){ d.estIds.push(id); if(!d.estZone[id]) d.estZone[id]=guessZone||ZONES[0].id; if(!d.prog[id]) d.prog[id]={banip:0,install:0}; if(!d.eqs[id]) d.eqs[id]={banipEqs:[],installEqs:[]}; }
   else { d.estIds.splice(i,1); } drawSettleForm(); };
-window.setZone=function(id,z){ settleDraft.estZone[id]=z; renderSetTot(); refreshProgTable(); };
-window.setProg=function(id,k,v){ settleDraft.prog[id]=settleDraft.prog[id]||{banip:0,install:0}; settleDraft.prog[id][k]=Math.max(0,num(v)); renderSetTot(); refreshProgTable(); };
-window.toggleSetDep=function(id){ settleDraft.deposit[id]=!settleDraft.deposit[id]; renderSetTot(); refreshProgTable(); };
-function refreshProgTable(){ const tb=document.querySelector('.ptab tbody'); if(tb) tb.innerHTML=settleDraft.estIds.map(id=>setEstRowHtml(id)).join(''); }
+window.setZone=function(id,z){ settleDraft.estZone[id]=z; settleDraft.billOverride[id]=null; renderSetTot(); refreshProgRows(); };
+window.toggleSetDep=function(id){ settleDraft.deposit[id]=!settleDraft.deposit[id]; settleDraft.billOverride[id]=null; renderSetTot(); refreshProgRows(); };
+window.setBill=function(id,v){ settleDraft.billOverride[id]=Math.max(0,num(v)); renderSetTot(); };
+function refreshProgRows(){ const el=$('prog-rows'); if(el) el.innerHTML=settleDraft.estIds.map(id=>setEstBlock(id)).join(''); }
 
 window.fetchProgress=async function(){ const d=settleDraft; if(!d.estIds.length){ toast('견적을 먼저 선택하세요.'); return; }
   toast('공정 데이터 불러오는 중...');
@@ -661,23 +678,46 @@ window.fetchProgress=async function(){ const d=settleDraft; if(!d.estIds.length)
     const zonesNeeded=[...new Set(d.estIds.map(id=>d.estZone[id]))];
     const cum={}; zonesNeeded.forEach(z=>cum[z]={});
     const tasks=[];
-    for(let day=1; day<=lastDay; day++){ const dk=y+'-'+String(m).padStart(2,'0')+'-'+String(day).padStart(2,'0');
-      // 6월 이전(프로젝트 시작 전)도 포함하려면 별도 처리 필요하나, 누적은 기준월 진행분 위주로 우선 집계
-      tasks.push((async()=>{ try{ const snap=await getDocs(collection(db,'progress_checks_'+dk)); snap.forEach(zd=>{ const zid=zd.id; if(cum[zid]){ const ch=zd.data().checks||{}; Object.keys(ch).forEach(k=>{ if(ch[k]) cum[zid][k]=true; }); } }); }catch(e){} })());
-    }
-    // 기준월 이전 누적도 합산 (프로젝트 시작 ~ 기준월 직전)
+    const readDay=dk=>tasks.push((async()=>{ try{ const snap=await getDocs(collection(db,'progress_checks_'+dk)); snap.forEach(zd=>{ const zid=zd.id; if(cum[zid]){ const ch=zd.data().checks||{}; Object.keys(ch).forEach(k=>{ if(ch[k]) cum[zid][k]=true; }); } }); }catch(e){} })());
+    for(let day=1; day<=lastDay; day++) readDay(y+'-'+String(m).padStart(2,'0')+'-'+String(day).padStart(2,'0'));
     const start=new Date(2026,5,1); const endPrev=new Date(y,m-1,1);
-    for(let dt=new Date(start); dt<endPrev; dt.setDate(dt.getDate()+1)){ const dk=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
-      tasks.push((async()=>{ try{ const snap=await getDocs(collection(db,'progress_checks_'+dk)); snap.forEach(zd=>{ const zid=zd.id; if(cum[zid]){ const ch=zd.data().checks||{}; Object.keys(ch).forEach(k=>{ if(ch[k]) cum[zid][k]=true; }); } }); }catch(e){} })());
-    }
+    for(let dt=new Date(start); dt<endPrev; dt.setDate(dt.getDate()+1)) readDay(dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'));
     await Promise.all(tasks);
     d.estIds.forEach(id=>{ const zid=d.estZone[id]; const z=ZONES.find(z=>z.id===zid); const ch=cum[zid]||{};
-      let banip=0, install=0;
-      if(z){ z.eqs.forEach(eq=>{ if(ch[eq+'_반입']) banip++; if(INSTALL_ITEMS.every(it=>ch[eq+'_'+it])) install++; }); }
-      d.prog[id]={banip, install}; });
-    renderSetTot(); refreshProgTable(); toast('공정 데이터를 반영했습니다.');
+      let banip=0, install=0; const banipEqs=[], installEqs=[];
+      if(z){ z.eqs.forEach(eq=>{ if(ch[eq+'_반입']){ banip++; banipEqs.push(eq); } if(INSTALL_ITEMS.every(it=>ch[eq+'_'+it])){ install++; installEqs.push(eq); } }); }
+      d.prog[id]={banip, install}; d.eqs[id]={banipEqs, installEqs}; d.billOverride[id]=null; });
+    renderSetTot(); refreshProgRows(); toast('반입·설치 장비번호를 반영했습니다.');
   }catch(e){ toast('불러오기 실패: '+(e.code||e.message)); }
 };
+
+/* 수량 정산 (일반 PJT) */
+function setQtyCard(pjtEsts){ const d=settleDraft;
+  return `<div class="card"><div class="sec-h"><h2>견적 연동 (수량 정산)</h2></div>
+    <div class="note-amber">견적서를 선택하면 품목이 펼쳐집니다. 품목별로 이번에 정산할 수량을 입력하면 단가×수량으로 금액이 계산되고, 기청구 수량은 차감됩니다. 금액은 직접 수정할 수 있습니다.</div>
+    ${pjtEsts.length? pjtEsts.map(e=>`<label class="estpick ${d.estIds.includes(e.id)?'on':''}">
+      <input type="checkbox" ${d.estIds.includes(e.id)?'checked':''} onchange="toggleQtyEst('${e.id}')">
+      <div style="flex:1"><div style="font-size:13px;font-weight:700">${e.title}</div><div class="small muted">${e.no} · 공급가 ${won(estSupply(e))}</div></div></label>`).join('') : '<div class="empty">이 프로젝트의 유효 견적이 없습니다.</div>'}
+    <div id="qty-rows">${d.estIds.map(id=>qtyEstBlock(id)).join('')}</div>
+  </div>`;
+}
+function qtyEstBlock(id){ const d=settleDraft; const e=estimates.find(x=>x.id===id); if(!e) return '';
+  return `<div style="border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-top:10px;background:#fafbfd">
+    <div style="font-weight:700;font-size:13px;margin-bottom:6px">${e.title}</div>
+    <div style="overflow-x:auto"><table class="ptab"><thead><tr><th class="l">품명</th><th>단가</th><th>총</th><th>기청구</th><th>이번수량</th><th>금액</th></tr></thead>
+    <tbody>${(e.items||[]).map((it,idx)=>{ const pr=priorQty(id,idx); const rem=(it.qty||0)-pr; const q=qVal(id,idx); const amt=qAmt(id,idx,it);
+      return `<tr><td class="l">${it.name}</td><td>${won(it.price)}</td><td>${won(it.qty)}</td><td class="muted">${won(pr)}</td>
+        <td><input class="ni" value="${q}" onchange="setQty('${id}',${idx},this.value)" title="잔여 ${rem}"></td>
+        <td><input class="ni wide bill" value="${won(amt)}" onchange="setQtyAmt('${id}',${idx},this.value)"></td></tr>`; }).join('')}</tbody></table></div></div>`;
+}
+function priorQty(estId,idx){ return settlements.filter(s=>setActive(s)&&s.docType==='invoice'&&s.perItem&&s.perItem[estId]&&s.perItem[estId][idx]).reduce((a,s)=>a+(s.perItem[estId][idx].qty||0),0); }
+function qVal(estId,idx){ const d=settleDraft; return (d.qtyInput[estId]&&d.qtyInput[estId][idx]!=null)?d.qtyInput[estId][idx]:0; }
+function qAmt(estId,idx,it){ const d=settleDraft; const o=d.qtyAmt[estId]&&d.qtyAmt[estId][idx]; if(o!=null) return o; return Math.round(qVal(estId,idx)*(it.price||0)); }
+window.toggleQtyEst=function(id){ const d=settleDraft; const i=d.estIds.indexOf(id);
+  if(i<0){ d.estIds.push(id); d.qtyInput[id]=d.qtyInput[id]||{}; d.qtyAmt[id]=d.qtyAmt[id]||{}; } else d.estIds.splice(i,1); drawSettleForm(); };
+window.setQty=function(id,idx,v){ const d=settleDraft; d.qtyInput[id]=d.qtyInput[id]||{}; d.qtyInput[id][idx]=Math.max(0,num(v)); if(d.qtyAmt[id]) delete d.qtyAmt[id][idx]; renderSetTot(); refreshQtyRows(); };
+window.setQtyAmt=function(id,idx,v){ const d=settleDraft; d.qtyAmt[id]=d.qtyAmt[id]||{}; d.qtyAmt[id][idx]=Math.max(0,num(v)); renderSetTot(); };
+function refreshQtyRows(){ const el=$('qty-rows'); if(el) el.innerHTML=settleDraft.estIds.map(id=>qtyEstBlock(id)).join(''); }
 
 /* 공수 */
 function setMandayCard(){ const d=settleDraft;
@@ -724,6 +764,7 @@ window.delSm=function(i){ settleDraft.manualItems.splice(i,1); if(!settleDraft.m
 function setSupply(){ const d=settleDraft;
   if(d.method==='manual') return d.manualItems.reduce((s,it)=>s+itemAmt(it),0);
   if(d.method==='manday'){ const md=d.mandayInput!=null?d.mandayInput:(d.mandayAuto||0); return Math.round(md*TEAM_RATE); }
+  if(d.method==='qty') return d.estIds.reduce((s,id)=>{ const e=estimates.find(x=>x.id===id); if(!e) return s; return s+(e.items||[]).reduce((a,it,idx)=>a+qAmt(id,idx,it),0); },0);
   return d.estIds.reduce((s,id)=>s+calcSetRow(id).thisBill,0);
 }
 function renderSetTot(){ const d=settleDraft; const sup=setSupply(); const vat=Math.round(sup*0.1);
@@ -738,7 +779,8 @@ function renderSetTot(){ const d=settleDraft; const sup=setSupply(); const vat=M
 function settleLines(){ const d=settleDraft;
   if(d.method==='manual') return d.manualItems.filter(i=>(i.name||'').trim()).map(i=>({name:i.name.trim(),spec:i.spec||'',qty:i.qty||0,price:i.price||0,amount:Math.round(itemAmt(i))}));
   if(d.method==='manday'){ const md=d.mandayInput!=null?d.mandayInput:(d.mandayAuto||0); return [{name:d.baseMonth+' 기술인력 투입',spec:'공수 '+md,qty:md,price:TEAM_RATE,amount:Math.round(md*TEAM_RATE)}]; }
-  return d.estIds.map(id=>{ const e=estimates.find(x=>x.id===id); const r=calcSetRow(id); const z=ZONES.find(z=>z.id===d.estZone[id]);
+  if(d.method==='qty'){ const lines=[]; d.estIds.forEach(id=>{ const e=estimates.find(x=>x.id===id); if(!e) return; (e.items||[]).forEach((it,idx)=>{ const q=qVal(id,idx); const amt=qAmt(id,idx,it); if(q>0||amt>0) lines.push({name:it.name,spec:(it.spec||'')+' · 수량 '+q,qty:q,price:it.price||0,amount:amt}); }); }); return lines; }
+  return d.estIds.map(id=>{ const e=estimates.find(x=>x.id===id); const r=calcSetRow(id); const z=ZONES.find(z=>z.id===d.estZone[id]); const eqd=d.eqs[id]||{banipEqs:[],installEqs:[]};
     return {name:e.title,spec:(z?z.name:'')+' 반입 '+r.banip+'/'+r.qty+' · 설치 '+r.install+'/'+r.qty,qty:1,price:r.thisBill,amount:r.thisBill}; });
 }
 
@@ -749,15 +791,16 @@ window.publishSettle=async function(){ const d=settleDraft; const sup=setSupply(
   const seq=settlements.filter(s=>s.docType===d.docType && (s.no||'').startsWith(yymm)).length+1;
   const no=yymm+String(seq).padStart(3,'0'); const id='set_'+Date.now();
   const snap=c=>c?{company:c.company,ceo:c.ceo||'',bizno:c.bizno||'',tel:c.tel||'',address:c.address||''}:null;
-  const perEst={}; let mandayUsed=0;
+  const perEst={}; const perItem={}; let mandayUsed=0;
   if(d.method==='progress') d.estIds.forEach(eid=>perEst[eid]=calcSetRow(eid).thisBill);
+  if(d.method==='qty') d.estIds.forEach(eid=>{ const e=estimates.find(x=>x.id===eid); if(!e) return; perItem[eid]={}; let es=0; (e.items||[]).forEach((it,idx)=>{ const q=qVal(eid,idx); const amt=qAmt(eid,idx,it); if(q>0||amt>0){ perItem[eid][idx]={qty:q,amount:amt}; es+=amt; } }); perEst[eid]=es; });
   if(d.method==='manday') mandayUsed=d.mandayInput!=null?d.mandayInput:(d.mandayAuto||0);
   const vat=Math.round(sup*0.1);
   $('set-save').disabled=true;
   try{ await setDoc(doc(db,'gihoek_settlements',id),{ pjtId:d.pjtId, no, docType:d.docType, method:d.method,
       baseMonth:d.baseMonth, issueDate:d.issueDate, payDate:d.payDate||'',
       senderId:d.senderId||'', sender:snap(compById(d.senderId)), recipientId:d.recipientId||'', recipient:snap(compById(d.recipientId)),
-      estIds:d.estIds||[], perEst, mandayUsed, lines:settleLines(),
+      estIds:d.estIds||[], perEst, perItem, mandayUsed, lines:settleLines(),
       supply:sup, vat, total:sup+vat, amount:sup, status:'active',
       author:(me&&me.name)||'', authorUid:(me&&me.uid)||'', createdAt:serverTimestamp() });
     toast((d.docType==='invoice'?'대금청구서':'지급예정서')+' '+no+' 발행'); renderSettle(); }
@@ -775,7 +818,7 @@ window.openSettle=function(id){ viewSetId=id; const s=settlements.find(x=>x.id==
         <div class="small muted" style="margin-top:3px"><span class="pill">${p?p.code:'-'}</span> &nbsp;${s.no} · 발행 ${s.issueDate}${s.author?' · '+s.author:''}</div></div>
         <div style="display:flex;gap:6px"><button class="btn line sm" onclick="previewSettle('${s.id}')">🖨 인쇄/PDF</button>${setActive(s)?`<button class="btn gray sm" onclick="voidSettle('${s.id}')">폐기</button>`:''}</div></div>
       <div class="partybox">${party('발신 (공급자)',s.sender)}${party(s.docType==='invoice'?'수신 (원청)':'수신 (하청)',s.recipient)}</div>
-      <div class="small muted" style="margin-bottom:10px">기준월 ${s.baseMonth} · ${s.docType==='invoice'?'지급요청일':'지급예정일'} ${s.payDate||'-'} · 정산방식 ${{progress:'공정율',manday:'공수',manual:'직접입력'}[s.method]}</div>
+      <div class="small muted" style="margin-bottom:10px">기준월 ${s.baseMonth} · ${s.docType==='invoice'?'지급요청일':'지급예정일'} ${s.payDate||'-'} · 정산방식 ${{progress:'공정 자동',qty:'수량정산',manday:'공수',manual:'직접입력'}[s.method]}</div>
       <div class="scroll"><table class="items"><thead><tr><th>#</th><th>내역</th><th>비고</th><th class="right">금액</th></tr></thead>
         <tbody>${(s.lines||[]).map((it,i)=>`<tr><td class="muted small">${i+1}</td><td>${it.name}</td><td class="muted small">${it.spec||'-'}</td><td class="right" style="font-weight:700;color:var(--money)">${won(it.amount)}</td></tr>`).join('')}</tbody></table></div>
       <div class="totbox"><div class="totrow"><span class="muted">공급가액</span><span>${won(s.supply)} 원</span></div>
@@ -795,7 +838,7 @@ function settleDocHTML(s){ const title=s.docType==='invoice'?'대 금 청 구 �
   <div class="parties">
     <div class="pcard"><div class="h">${s.docType==='invoice'?'수신 (원청)':'수신 (하청)'}</div><div class="nm">${rc.company||'-'}</div><div class="ln">${rc.ceo?'대표 '+rc.ceo:''}${rc.bizno?' / '+rc.bizno:''}</div>${rc.tel?`<div class="ln">${rc.tel}</div>`:''}</div>
     <div class="pcard"><div class="h">발신 (공급자)</div><div class="nm">${sd.company||'-'}</div><div class="ln">${sd.ceo?'대표 '+sd.ceo:''}${sd.bizno?' / '+sd.bizno:''}</div>${sd.tel?`<div class="ln">${sd.tel}</div>`:''}</div></div>
-  <div class="info"><b>프로젝트</b> : ${p?p.code:'-'} &nbsp;&nbsp; <b>기준월</b> : ${s.baseMonth} &nbsp;&nbsp; <b>${dateLabel}</b> : ${s.payDate||'-'} &nbsp;&nbsp; <b>정산방식</b> : ${{progress:'공정율 연동',manday:'공수 연동',manual:'직접 입력'}[s.method]}</div>
+  <div class="info"><b>프로젝트</b> : ${p?p.code:'-'} &nbsp;&nbsp; <b>기준월</b> : ${s.baseMonth} &nbsp;&nbsp; <b>${dateLabel}</b> : ${s.payDate||'-'} &nbsp;&nbsp; <b>정산방식</b> : ${{progress:'공정 연동',qty:'수량 정산',manday:'공수 연동',manual:'직접 입력'}[s.method]}</div>
   <table><thead><tr><th style="width:34px">No</th><th>내역</th><th>비고</th><th style="width:130px">금액</th></tr></thead><tbody>${rows}</tbody>
   <tfoot><tr><td colspan="3" style="text-align:right">공급가액</td><td style="text-align:right">${won(s.supply)}</td></tr>
     <tr><td colspan="3" style="text-align:right">부가세 (10%)</td><td style="text-align:right">${won(s.vat)}</td></tr>
