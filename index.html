@@ -97,6 +97,7 @@
     <div class="t"><div class="ic">📊</div><h1>기획</h1></div>
     <div class="tabs">
       <div class="tab on" data-tab="pjt"    onclick="tab('pjt')">프로젝트</div>
+      <div class="tab"    data-tab="comp"   onclick="tab('comp')">거래처</div>
       <div class="tab"    data-tab="est"    onclick="tab('est')">견적</div>
       <div class="tab"    data-tab="settle" onclick="tab('settle')">정산</div>
       <div class="tab"    data-tab="acct"   onclick="tab('acct')">회계</div>
@@ -104,6 +105,7 @@
   </div>
   <div class="body">
     <div id="v-pjt"    class="view on"></div>
+    <div id="v-comp"   class="view"></div>
     <div id="v-est"    class="view"></div>
     <div id="v-settle" class="view"></div>
     <div id="v-acct"   class="view"></div>
@@ -138,20 +140,20 @@ const estTotal =e=>{ const s=estSupply(e); return s+Math.round(s*0.1); };
 function toast(t){ const e=$('toast'); e.textContent=t; e.classList.add('show'); clearTimeout(e._t); e._t=setTimeout(()=>e.classList.remove('show'),2300); }
 
 let me=null;
-let projects=[], estimates=[], settlements=[], clients=[], issuers=[];
+let projects=[], estimates=[], settlements=[], companies=[];
+const supplierList=()=>companies.filter(c=>c.roleSupplier);
+const clientList=()=>companies.filter(c=>c.roleClient);
+const compById=id=>companies.find(c=>c.id===id)||null;
 
 const pjtEstSum=pid=>estimates.filter(e=>e.pjtId===pid).reduce((s,e)=>s+estSupply(e),0);
 const pjtBilled=pid=>settlements.filter(s=>s.pjtId===pid&&s.docType==='invoice').reduce((a,s)=>a+(s.amount||0),0);
 const pjtPaid =pid=>settlements.filter(s=>s.pjtId===pid&&s.docType==='payment').reduce((a,s)=>a+(s.amount||0),0);
 
-const SEED_ISSUERS=[
-  {id:'jhsol', company:'제이에이치솔루션', ceo:'김종화', bizno:'383-09-02847', tel:'010-6650-5804', email:'jh.kim@jhsol.kr', address:''},
-  {id:'jheng', company:'제이에이치이엔지', ceo:'김영희', bizno:'', tel:'010-3735-7891', email:'butterfly313@naver.com', address:''},
-];
-const SEED_CLIENTS=[
-  {id:'darim', company:'다람이엔지', ceo:'현병찬', bizno:'', tel:'010-8363-1085', email:'skyhbc@naver.com', address:''},
-  {id:'sj',    company:'에스제이',   ceo:'서민우', bizno:'', tel:'010-8456-1098', email:'seoyo20@naver.com', address:''},
-  {id:'jheng', company:'제이에이치이엔지', ceo:'김영희', bizno:'', tel:'010-3735-7891', email:'butterfly313@naver.com', address:''},
+const SEED_COMPANIES=[
+  {id:'jhsol', company:'제이에이치솔루션', ceo:'김종화', bizno:'383-09-02847', tel:'010-6650-5804', email:'jh.kim@jhsol.kr', address:'', roleSupplier:true,  roleClient:false},
+  {id:'jheng', company:'제이에이치이엔지', ceo:'김영희', bizno:'', tel:'010-3735-7891', email:'butterfly313@naver.com', address:'', roleSupplier:true, roleClient:true},
+  {id:'darim', company:'다람이엔지', ceo:'현병찬', bizno:'', tel:'010-8363-1085', email:'skyhbc@naver.com', address:'', roleSupplier:false, roleClient:true},
+  {id:'sj',    company:'에스제이',   ceo:'서민우', bizno:'', tel:'010-8456-1098', email:'seoyo20@naver.com', address:'', roleSupplier:false, roleClient:true},
 ];
 
 onAuthStateChanged(auth, async user=>{
@@ -167,25 +169,31 @@ function showDenied(t,s){ $('splash').style.display='none'; $('app').style.displ
 
 async function startApp(){
   $('splash').style.display='none'; $('app').style.display='block';
+  // 통합 거래처(gihoek_companies) 시드/이전: 비어있으면 기존 거래처·발행처에서 역할 합쳐 생성
   try{
-    const isnap=await getDocs(collection(db,'gihoek_issuers'));
-    if(isnap.empty){ for(const x of SEED_ISSUERS){ const {id,...r}=x; await setDoc(doc(db,'gihoek_issuers',id),r); } }
-    const csnap=await getDocs(collection(db,'gihoek_clients'));
-    if(csnap.empty){ for(const x of SEED_CLIENTS){ const {id,...r}=x; await setDoc(doc(db,'gihoek_clients',id),r); } }
+    const compSnap=await getDocs(collection(db,'gihoek_companies'));
+    if(compSnap.empty){
+      const merged={}; // key: 회사명
+      const put=(d,role)=>{ const k=(d.company||'').trim(); if(!k) return; if(!merged[k]) merged[k]={company:k,ceo:d.ceo||'',bizno:d.bizno||'',tel:d.tel||'',email:d.email||'',address:d.address||'',roleSupplier:false,roleClient:false}; merged[k][role]=true; ['ceo','bizno','tel','email','address'].forEach(f=>{ if(!merged[k][f]&&d[f]) merged[k][f]=d[f]; }); };
+      try{ (await getDocs(collection(db,'gihoek_issuers'))).forEach(s=>put(s.data(),'roleSupplier')); }catch(e){}
+      try{ (await getDocs(collection(db,'gihoek_clients'))).forEach(s=>put(s.data(),'roleClient')); }catch(e){}
+      const list=Object.values(merged);
+      if(list.length){ let i=0; for(const c of list){ await setDoc(doc(db,'gihoek_companies','co_'+Date.now()+'_'+(i++)),c); } }
+      else { for(const x of SEED_COMPANIES){ const {id,...r}=x; await setDoc(doc(db,'gihoek_companies',id),r); } }
+    }
   }catch(e){}
   onSnapshot(collection(db,'gihoek_projects'), s=>{ projects=[]; s.forEach(d=>projects.push({id:d.id,...d.data()})); projects.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0)); if(curTab==='pjt'&&!detailId&&!pjtForm) renderPjt(); });
-  onSnapshot(collection(db,'gihoek_estimates'), s=>{ estimates=[]; s.forEach(d=>estimates.push({id:d.id,...d.data()})); estimates.sort((a,b)=>(b.date||'').localeCompare(a.date||'')); if(curTab==='pjt'&&detailId) pjtDetail(detailId); else if(curTab==='pjt'&&!pjtForm) renderPjt(); if(curTab==='est'&&!estDraft&&!viewEstId&&!clientMgr) renderEst(); });
+  onSnapshot(collection(db,'gihoek_estimates'), s=>{ estimates=[]; s.forEach(d=>estimates.push({id:d.id,...d.data()})); estimates.sort((a,b)=>(b.date||'').localeCompare(a.date||'')); if(curTab==='pjt'&&detailId) pjtDetail(detailId); else if(curTab==='pjt'&&!pjtForm) renderPjt(); if(curTab==='est'&&!estDraft&&!viewEstId) renderEst(); });
   onSnapshot(collection(db,'gihoek_settlements'), s=>{ settlements=[]; s.forEach(d=>settlements.push({id:d.id,...d.data()})); if(curTab==='pjt') { detailId?pjtDetail(detailId):renderPjt(); } });
-  onSnapshot(collection(db,'gihoek_clients'), s=>{ clients=[]; s.forEach(d=>clients.push({id:d.id,...d.data()})); });
-  onSnapshot(collection(db,'gihoek_issuers'), s=>{ issuers=[]; s.forEach(d=>issuers.push({id:d.id,...d.data()})); });
+  onSnapshot(collection(db,'gihoek_companies'), s=>{ companies=[]; s.forEach(d=>companies.push({id:d.id,...d.data()})); companies.sort((a,b)=>(a.company||'').localeCompare(b.company||'')); if(curTab==='comp'&&!compForm) renderComp(); });
   renderPjt();
 }
 
 let curTab='pjt';
-function tab(t){ curTab=t; detailId=null; estDraft=null; viewEstId=null; pjtForm=false; clientMgr=false;
+function tab(t){ curTab=t; detailId=null; estDraft=null; viewEstId=null; pjtForm=false; compForm=false;
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on', x.dataset.tab===t));
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('on')); $('v-'+t).classList.add('on');
-  ({pjt:renderPjt, est:renderEst, settle:renderSettle, acct:renderAcct})[t](); window.scrollTo(0,0); }
+  ({pjt:renderPjt, comp:renderComp, est:renderEst, settle:renderSettle, acct:renderAcct})[t](); window.scrollTo(0,0); }
 function tabSilent(t){ curTab=t; document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on', x.dataset.tab===t)); document.querySelectorAll('.view').forEach(v=>v.classList.remove('on')); $('v-'+t).classList.add('on'); }
 
 /* ---------------- 프로젝트 ---------------- */
@@ -248,11 +256,9 @@ window.delPjt=async function(id){ if(!confirm('이 프로젝트를 삭제할까�
   try{ await deleteDoc(doc(db,'gihoek_projects',id)); toast('삭제했습니다.'); renderPjt(); }catch(e){ toast('삭제 실패: '+(e.code||e.message)); } };
 
 /* ---------------- 견적 ---------------- */
-let estDraft=null, viewEstId=null, clientMgr=false;
-function renderEst(){ estDraft=null; viewEstId=null; clientMgr=false;
-  $('v-est').innerHTML=`<div class="sec-h"><h2>견적</h2><div style="display:flex;gap:8px">
-    <button class="btn gray sm" onclick="openClientMgr()">거래처 관리</button>
-    <button class="btn pri sm" onclick="newEst()">+ 견적 작성</button></div></div>
+let estDraft=null, viewEstId=null;
+function renderEst(){ estDraft=null; viewEstId=null;
+  $('v-est').innerHTML=`<div class="sec-h"><h2>견적</h2><button class="btn pri sm" onclick="newEst()">+ 견적 작성</button></div>
   ${estimates.length? estimates.map(e=>{ const p=projects.find(x=>x.id===e.pjtId);
     return `<div class="litem" onclick="openEst('${e.id}')"><div class="d"><div class="ti">${e.title}</div><div class="mt"><span class="pill">${p?p.code:'삭제된 PJT'}</span> &nbsp;${e.no} · ${e.date}${e.client?.company?' · '+e.client.company:''}</div></div><div class="amt">${won(estTotal(e))}</div></div>`;
   }).join('') : '<div class="empty">작성된 견적이 없습니다.</div>'}`;
@@ -261,20 +267,21 @@ window.renderEst=renderEst;
 
 window.newEst=function(pjtId){
   if(!projects.length){ toast('먼저 프로젝트를 등록하세요.'); tab('pjt'); return; }
+  const sup=supplierList(), cli=clientList();
   estDraft={ editId:null, no:null, pjtId:pjtId||projects[0].id, title:'', date:new Date().toISOString().slice(0,10),
-    clientId: clients[0]?.id||'', issuerId: issuers.find(i=>i.id==='jhsol')?.id || issuers[0]?.id || '',
+    clientId: cli[0]?.id||'', issuerId: (sup.find(c=>c.company==='제이에이치솔루션')?.id) || sup[0]?.id || '',
     items:[{name:'',spec:'',qty:1,price:0,amount:0},{name:'',spec:'',qty:1,price:0,amount:0}] };
   tabSilent('est'); drawEstForm();
 };
 window.editEst=function(id){
   const e=estimates.find(x=>x.id===id); if(!e){ renderEst(); return; }
   estDraft={ editId:e.id, no:e.no, pjtId:e.pjtId, title:e.title||'', date:e.date||new Date().toISOString().slice(0,10),
-    clientId:e.clientId||'', issuerId:e.issuerId||(issuers.find(i=>i.id==='jhsol')?.id)||'',
+    clientId:e.clientId||'', issuerId:e.issuerId||(supplierList().find(c=>c.company==='제이에이치솔루션')?.id)||'',
     items:(e.items&&e.items.length)? e.items.map(i=>({name:i.name||'',spec:i.spec||'',qty:i.qty||0,price:i.price||0,amount:Math.round(itemAmt(i))})) : [{name:'',spec:'',qty:1,price:0,amount:0}] };
   viewEstId=null; tabSilent('est'); drawEstForm();
 };
-function clientOpt(sel){ return `<option value="">— 선택 —</option>`+clients.map(c=>`<option value="${c.id}" ${c.id===sel?'selected':''}>${c.company}${c.ceo?' ('+c.ceo+')':''}</option>`).join(''); }
-function issuerOpt(sel){ return issuers.map(c=>`<option value="${c.id}" ${c.id===sel?'selected':''}>${c.company}${c.ceo?' ('+c.ceo+')':''}</option>`).join(''); }
+function clientOpt(sel){ const list=clientList(); return `<option value="">— 선택 —</option>`+list.map(c=>`<option value="${c.id}" ${c.id===sel?'selected':''}>${c.company}${c.ceo?' ('+c.ceo+')':''}</option>`).join(''); }
+function issuerOpt(sel){ const list=supplierList(); return `<option value="">— 선택 —</option>`+list.map(c=>`<option value="${c.id}" ${c.id===sel?'selected':''}>${c.company}${c.ceo?' ('+c.ceo+')':''}</option>`).join(''); }
 
 function drawEstForm(){ const d=estDraft;
   $('v-est').innerHTML=`<button class="back" onclick="renderEst()">← 견적 목록</button>
@@ -287,7 +294,7 @@ function drawEstForm(){ const d=estDraft;
       <div class="field"><label>공급자 (보내는 곳)</label><select class="sel" onchange="setDraft('issuerId',this.value)">${issuerOpt(d.issuerId)}</select></div>
       <div class="field"><label>공급받는자 (거래처)</label><select class="sel" id="ed-client" onchange="setDraft('clientId',this.value)">${clientOpt(d.clientId)}</select></div>
     </div>
-    <div class="field" style="margin-top:-4px"><button class="btn gray sm" onclick="openClientMgr('est')">+ 거래처 추가·관리</button></div>
+    <div class="field" style="margin-top:-4px"><button class="btn gray sm" onclick="tab('comp')">+ 거래처 추가·관리</button></div>
     <div class="field"><label>견적 제목</label><input class="inp" id="ed-title" placeholder="예: FCU 설치 1차 견적" value="${d.title}" oninput="setDraft('title',this.value)"></div>
     <label style="font-size:12px;color:var(--sub);font-weight:600">품목</label>
     <div class="scroll"><table class="items">
@@ -341,7 +348,7 @@ window.saveEst=async function(){ const d=estDraft;
   if(!d.title.trim()){ toast('견적 제목을 입력하세요.'); return; }
   const items=d.items.filter(i=>(i.name||'').trim()).map(i=>({name:i.name.trim(),spec:i.spec||'',qty:i.qty||0,price:i.price||0,amount:Math.round(itemAmt(i))}));
   if(!items.length){ toast('품목을 1개 이상 입력하세요.'); return; }
-  const cl=clients.find(c=>c.id===d.clientId)||null; const iss=issuers.find(c=>c.id===d.issuerId)||null;
+  const cl=compById(d.clientId); const iss=compById(d.issuerId);
   let id, no;
   if(d.editId){ id=d.editId; no=d.no; }
   else{ const yr=d.date.slice(0,4); const cnt=estimates.filter(e=>(e.no||'').startsWith('EST-'+yr)).length+1; no='EST-'+yr+'-'+String(cnt).padStart(3,'0'); id='est_'+Date.now(); }
@@ -423,32 +430,46 @@ window.printEst=function(id){ const e=estimates.find(x=>x.id===id); if(!e) retur
   w.document.close();
 };
 
-/* ---------- 거래처 관리 ---------- */
-window.openClientMgr=function(){ clientMgr=true; tabSilent('est'); drawClientMgr(); };
-function drawClientMgr(){
-  $('v-est').innerHTML=`<button class="back" onclick="renderEst()">← 견적</button>
-    <div class="sec-h"><h2>거래처 관리</h2><button class="btn pri sm" onclick="editClient()">+ 거래처 추가</button></div>
-    ${clients.length? clients.map(c=>`<div class="litem" onclick="editClient('${c.id}')"><div class="d"><div class="ti">${c.company}</div><div class="mt">${c.ceo?'대표 '+c.ceo:''}${c.tel?' · '+c.tel:''}</div></div><div class="small muted">수정 ›</div></div>`).join('') : '<div class="empty">등록된 거래처가 없습니다.</div>'}`;
-  window.scrollTo(0,0);
+/* ---------------- 거래처 (탭) ---------------- */
+let compForm=false;
+function roleBadges(c){ const b=[]; if(c.roleSupplier) b.push('<span class="pill" style="background:#fdeede;color:#e08a1e">공급자</span>'); if(c.roleClient) b.push('<span class="pill">공급받는자</span>'); return b.join(' '); }
+function renderComp(){ compForm=false;
+  const sup=companies.filter(c=>c.roleSupplier), cli=companies.filter(c=>c.roleClient);
+  $('v-comp').innerHTML=`<div class="sec-h"><h2>거래처</h2><button class="btn pri sm" onclick="editComp()">+ 업체 등록</button></div>
+    <div class="small muted" style="margin-bottom:14px">업체를 등록하고 역할(공급자 / 공급받는자)을 지정하면, 견적 작성 시 역할에 맞는 드롭다운에 나타납니다.</div>
+    <div style="font-size:12px;font-weight:700;color:var(--amber);margin:4px 0 8px">공급자 (우리 발행 주체) ${sup.length}</div>
+    ${sup.length? sup.map(c=>compRow(c)).join('') : '<div class="empty" style="padding:18px">공급자로 지정된 업체가 없습니다.</div>'}
+    <div style="font-size:12px;font-weight:700;color:var(--blue);margin:18px 0 8px">공급받는자 (거래 상대) ${cli.length}</div>
+    ${cli.length? cli.map(c=>compRow(c)).join('') : '<div class="empty" style="padding:18px">공급받는자로 지정된 업체가 없습니다.</div>'}
+    ${companies.filter(c=>!c.roleSupplier&&!c.roleClient).length?`<div style="font-size:12px;font-weight:700;color:var(--sub);margin:18px 0 8px">역할 미지정</div>${companies.filter(c=>!c.roleSupplier&&!c.roleClient).map(c=>compRow(c)).join('')}`:''}`;
 }
-window.editClient=function(id){ const c=id?clients.find(x=>x.id===id):null;
-  $('v-est').innerHTML=`<button class="back" onclick="openClientMgr()">← 거래처 목록</button>
-    <div class="card"><div class="sec-h"><h2>${c?'거래처 수정':'거래처 추가'}</h2></div>
+function compRow(c){ return `<div class="litem" onclick="editComp('${c.id}')"><div class="d"><div class="ti">${c.company} &nbsp;${roleBadges(c)}</div><div class="mt">${c.ceo?'대표 '+c.ceo:''}${c.bizno?' · '+c.bizno:''}${c.tel?' · '+c.tel:''}</div></div><div class="small muted">수정 ›</div></div>`; }
+window.renderComp=renderComp;
+window.editComp=function(id){ compForm=true; const c=id?compById(id):null;
+  $('v-comp').innerHTML=`<button class="back" onclick="renderComp()">← 거래처 목록</button>
+    <div class="card"><div class="sec-h"><h2>${c?'업체 수정':'업체 등록'}</h2></div>
     <div class="field"><label>회사명</label><input class="inp" id="cf-company" value="${(c?.company||'').replace(/"/g,'&quot;')}"></div>
+    <div class="field"><label>역할 (중복 선택 가능)</label>
+      <div style="display:flex;gap:18px;padding:4px 2px">
+        <label style="display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;cursor:pointer"><input type="checkbox" id="cf-sup" ${c?.roleSupplier?'checked':''} style="width:17px;height:17px;accent-color:var(--blue)"> 공급자 (우리가 발행)</label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;cursor:pointer"><input type="checkbox" id="cf-cli" ${c?.roleClient?'checked':''} style="width:17px;height:17px;accent-color:var(--blue)"> 공급받는자 (거래 상대)</label>
+      </div></div>
     <div class="row2"><div class="field"><label>대표자</label><input class="inp" id="cf-ceo" value="${(c?.ceo||'').replace(/"/g,'&quot;')}"></div>
       <div class="field"><label>사업자번호</label><input class="inp" id="cf-bizno" value="${c?.bizno||''}"></div></div>
-    <div class="row2"><div class="field"><label>연락처</label><input class="inp" id="cf-tel" value="${c?.tel||''}"></div>
+    <div class="row2"><div class="field"><label>연락처 (담당자)</label><input class="inp" id="cf-tel" value="${c?.tel||''}"></div>
       <div class="field"><label>이메일</label><input class="inp" id="cf-email" value="${c?.email||''}"></div></div>
     <div class="field"><label>주소</label><input class="inp" id="cf-address" value="${(c?.address||'').replace(/"/g,'&quot;')}"></div>
-    <div style="display:flex;gap:8px">${c?`<button class="btn gray sm" onclick="delClient('${c.id}')">삭제</button>`:''}
-      <button class="btn line full" onclick="openClientMgr()">취소</button><button class="btn pri full" onclick="saveClient('${c?c.id:''}')">저장</button></div></div>`;
+    <div style="display:flex;gap:8px">${c?`<button class="btn gray sm" onclick="delComp('${c.id}')">삭제</button>`:''}
+      <button class="btn line full" onclick="renderComp()">취소</button><button class="btn pri full" onclick="saveComp('${c?c.id:''}')">저장</button></div></div>`;
   window.scrollTo(0,0);
 };
-window.saveClient=async function(id){ const company=$('cf-company').value.trim(); if(!company){ toast('회사명을 입력하세요.'); return; }
-  const data={ company, ceo:$('cf-ceo').value.trim(), bizno:$('cf-bizno').value.trim(), tel:$('cf-tel').value.trim(), email:$('cf-email').value.trim(), address:$('cf-address').value.trim() };
-  try{ const cid=id||('cl_'+Date.now()); await setDoc(doc(db,'gihoek_clients',cid),data,{merge:true}); toast('저장했습니다.'); openClientMgr(); }
+window.saveComp=async function(id){ const company=$('cf-company').value.trim(); if(!company){ toast('회사명을 입력하세요.'); return; }
+  const roleSupplier=$('cf-sup').checked, roleClient=$('cf-cli').checked;
+  if(!roleSupplier&&!roleClient){ if(!confirm('역할이 지정되지 않았습니다. 그래도 저장할까요?\\n(견적 드롭다운에는 나타나지 않습니다)')) return; }
+  const data={ company, ceo:$('cf-ceo').value.trim(), bizno:$('cf-bizno').value.trim(), tel:$('cf-tel').value.trim(), email:$('cf-email').value.trim(), address:$('cf-address').value.trim(), roleSupplier, roleClient };
+  try{ const cid=id||('co_'+Date.now()); await setDoc(doc(db,'gihoek_companies',cid),data,{merge:true}); toast('저장했습니다.'); renderComp(); }
   catch(e){ toast('저장 실패: '+(e.code||e.message)); } };
-window.delClient=async function(id){ if(!confirm('이 거래처를 삭제할까요?')) return; try{ await deleteDoc(doc(db,'gihoek_clients',id)); toast('삭제했습니다.'); openClientMgr(); }catch(e){ toast('삭제 실패: '+(e.code||e.message)); } };
+window.delComp=async function(id){ if(!confirm('이 업체를 삭제할까요? (기존 견적에 저장된 정보는 유지됩니다)')) return; try{ await deleteDoc(doc(db,'gihoek_companies',id)); toast('삭제했습니다.'); renderComp(); }catch(e){ toast('삭제 실패: '+(e.code||e.message)); } };
 
 /* ---------------- 정산 / 회계 (다음 단계) ---------------- */
 function renderSettle(){ $('v-settle').innerHTML=`<div class="soon"><div class="big">🧾</div><div style="font-weight:700;color:var(--ink)">정산 — 준비 중</div><div class="small" style="margin-top:6px">대금청구서·지급예정서를 PJT별로 작성·조회합니다.<br>다음 단계에서 추가됩니다.</div></div>`; }
