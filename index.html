@@ -648,7 +648,7 @@ window.newSettle=function(pjtId){
   settleDraft={ docType:'invoice', pjtId:pjtId||projects[0].id, method:'progress',
     baseMonth:new Date().toISOString().slice(0,7), issueDate:new Date().toISOString().slice(0,10), payDate:'',
     senderId:(sup.find(c=>c.company==='제이에이치솔루션')?.id)||sup[0]?.id||'', recipientId:'',
-    estIds:[], estZone:{}, deposit:{}, prog:{}, eqs:{}, billOverride:{}, qtyInput:{}, qtyAmt:{}, mandayInput:null, mandayAuto:null,
+    estIds:[], estZone:{}, deposit:{}, prog:{}, eqs:{}, billOverride:{}, qtyInput:{}, qtyAmt:{}, mandayInput:null, mandayAuto:null, mandayRate:TEAM_RATE,
     manualItems:[{name:'',spec:'',qty:1,price:0,amount:0},{name:'',spec:'',qty:1,price:0,amount:0}] };
   tabSilent('settle'); drawSettleForm();
 };
@@ -697,8 +697,9 @@ function compactRanges(arr){ if(!arr||!arr.length) return '-';
   return out.join(', ');
 }
 function setProgressCard(pjtEsts){ const d=settleDraft;
-  return `<div class="card"><div class="sec-h"><h2>견적 연동 (공정 자동)</h2>${d.estIds.length?`<button class="btn line sm" onclick="fetchProgress()">⟳ 공정 데이터 불러오기</button>`:''}</div>
-    <div class="note-amber">견적을 고르고 “공정 데이터 불러오기”를 누르면, 워크스페이스에서 반입·설치된 장비번호와 개수를 자동으로 읽어옵니다. 반입 80% + 설치 20% + 보증금 10%로 계산하며, 기청구액은 차감됩니다. 이번청구 금액은 직접 수정할 수 있습니다.</div>
+  return `<div class="card"><div class="sec-h"><h2>견적 연동 (공정 자동)</h2><button class="btn line sm" onclick="fetchProgress()">⟳ 공정 데이터 불러오기</button></div>
+    <div class="note-amber">아래에서 <b>견적서를 선택</b>하고 섹터를 확인한 뒤 "공정 데이터 불러오기"를 누르세요. 반입 80% + 설치 20% + 보증금 10%, 기청구 차감됩니다.</div>
+    <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px">▼ 견적서 선택 (${d.estIds.length}건 선택됨)</div>
     ${pjtEsts.length? pjtEsts.map(e=>`<label class="estpick ${d.estIds.includes(e.id)?'on':''}">
       <input type="checkbox" ${d.estIds.includes(e.id)?'checked':''} onchange="toggleSetEst('${e.id}','${zoneGuess(e.title)}')">
       <div style="flex:1"><div style="font-size:13px;font-weight:700">${e.title}</div><div class="small muted">${e.no} · 공급가 ${won(estSupply(e))}</div></div></label>`).join('') : '<div class="empty">이 프로젝트의 유효 견적이 없습니다.</div>'}
@@ -797,17 +798,23 @@ function refreshQtyRows(){ const el=$('qty-rows'); if(el) el.innerHTML=settleDra
 /* 공수 */
 function setMandayCard(){ const d=settleDraft;
   const md=d.mandayInput!=null?d.mandayInput:(d.mandayAuto!=null?d.mandayAuto:0);
+  const rate=d.mandayRate!=null?d.mandayRate:TEAM_RATE;
   const prior=priorManday();
   return `<div class="card"><div class="sec-h"><h2>공수 연동</h2><button class="btn line sm" onclick="fetchManday()">⟳ 공수 불러오기</button></div>
-    <div class="note-amber">기준월(${d.baseMonth}) 공수 합계를 워크스페이스에서 읽어옵니다. 단가 ${won(TEAM_RATE)}원/공수. 직접 수정 가능합니다.</div>
+    <div class="note-amber">기준월(${d.baseMonth}) 공수 합계를 워크스페이스에서 읽어옵니다. 공수·단가 모두 직접 수정 가능합니다.</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <label class="small muted" style="white-space:nowrap">기술인력 단가 (원/공수)</label>
+      <input class="inp" type="number" style="width:130px;text-align:right" value="${rate}" onchange="setMandayRate(this.value)">
+    </div>
     <table class="ptab"><thead><tr><th class="l">항목</th><th>공수</th><th>단가</th><th>금액</th></tr></thead>
     <tbody><tr><td class="l">${d.baseMonth} 기술인력 투입</td>
-      <td><input class="ni" value="${md}" onchange="setMd(this.value)"></td><td>${won(TEAM_RATE)}</td><td class="bill">${won(md*TEAM_RATE)}</td></tr>
-      ${prior?`<tr><td class="l muted">기지급 공수</td><td class="muted">${prior}</td><td></td><td class="muted">-${won(prior*TEAM_RATE)}</td></tr>`:''}</tbody></table>
+      <td><input class="ni" value="${md}" onchange="setMd(this.value)"></td><td>${won(rate)}</td><td class="bill">${won(Math.round(md*rate))}</td></tr>
+      ${prior?`<tr><td class="l muted">기지급 공수</td><td class="muted">${prior}</td><td></td><td class="muted">-${won(Math.round(prior*rate))}</td></tr>`:''}</tbody></table>
     ${d.mandayAuto!=null?`<div class="small muted" style="margin-top:6px">자동 집계: ${d.mandayAuto} 공수</div>`:''}</div>`;
 }
 function priorManday(){ return settlements.filter(s=>setActive(s)&&s.docType==='payment'&&s.method==='manday').reduce((a,s)=>a+(s.mandayUsed||0),0); }
 window.setMd=function(v){ settleDraft.mandayInput=num(v); drawSettleForm(); };
+window.setMandayRate=function(v){ settleDraft.mandayRate=Math.round(num(v))||TEAM_RATE; drawSettleForm(); };
 window.fetchManday=async function(){ const d=settleDraft; toast('공수 불러오는 중...');
   try{ const [y,m]=d.baseMonth.split('-').map(Number); const lastDay=new Date(y,m,0).getDate(); let sum=0; const tasks=[];
     for(let day=1; day<=lastDay; day++){ const dk=y+'-'+String(m).padStart(2,'0')+'-'+String(day).padStart(2,'0');
@@ -838,7 +845,7 @@ window.delSm=function(i){ settleDraft.manualItems.splice(i,1); if(!settleDraft.m
 
 function setSupply(){ const d=settleDraft;
   if(d.method==='manual') return d.manualItems.reduce((s,it)=>s+itemAmt(it),0);
-  if(d.method==='manday'){ const md=d.mandayInput!=null?d.mandayInput:(d.mandayAuto||0); return Math.round(md*TEAM_RATE); }
+  if(d.method==='manday'){ const md=d.mandayInput!=null?d.mandayInput:(d.mandayAuto||0); const rate=d.mandayRate!=null?d.mandayRate:TEAM_RATE; return Math.round(md*rate); }
   if(d.method==='qty') return d.estIds.reduce((s,id)=>{ const e=estimates.find(x=>x.id===id); if(!e) return s; return s+(e.items||[]).reduce((a,it,idx)=>a+qAmt(id,idx,it),0); },0);
   return d.estIds.reduce((s,id)=>s+calcSetRow(id).thisBill,0);
 }
@@ -853,7 +860,7 @@ function renderSetTot(){ const d=settleDraft; const sup=setSupply(); const vat=M
 
 function settleLines(){ const d=settleDraft;
   if(d.method==='manual') return d.manualItems.filter(i=>(i.name||'').trim()).map(i=>({name:i.name.trim(),spec:i.spec||'',qty:i.qty||0,price:i.price||0,amount:Math.round(itemAmt(i))}));
-  if(d.method==='manday'){ const md=d.mandayInput!=null?d.mandayInput:(d.mandayAuto||0); return [{name:d.baseMonth+' 기술인력 투입',spec:'공수 '+md,qty:md,price:TEAM_RATE,amount:Math.round(md*TEAM_RATE)}]; }
+  if(d.method==='manday'){ const md=d.mandayInput!=null?d.mandayInput:(d.mandayAuto||0); const rate=d.mandayRate!=null?d.mandayRate:TEAM_RATE; return [{name:d.baseMonth+' 기술인력 투입',spec:'공수 '+md,qty:md,price:rate,amount:Math.round(md*rate)}]; }
   if(d.method==='qty'){ const lines=[]; d.estIds.forEach(id=>{ const e=estimates.find(x=>x.id===id); if(!e) return; (e.items||[]).forEach((it,idx)=>{ const q=qVal(id,idx); const amt=qAmt(id,idx,it); if(q>0||amt>0) lines.push({name:it.name,spec:(it.spec||'')+' · 수량 '+q,qty:q,price:it.price||0,amount:amt}); }); }); return lines; }
   return d.estIds.map(id=>{ const e=estimates.find(x=>x.id===id); const r=calcSetRow(id); const z=ZONES.find(z=>z.id===d.estZone[id]); const eqd=d.eqs[id]||{banipEqs:[],installEqs:[]};
     const bN=eqd.banipEqs&&eqd.banipEqs.length?' ('+compactRanges(eqd.banipEqs)+')':''; const iN=eqd.installEqs&&eqd.installEqs.length?' ('+compactRanges(eqd.installEqs)+')':'';
